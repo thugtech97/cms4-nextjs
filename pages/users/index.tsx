@@ -1,7 +1,7 @@
 // pages/dashboard/users.tsx
 import AdminLayout from "@/components/Layout/AdminLayout";
 import DataTable, { Column } from "@/components/UI/DataTable";
-import SearchBar from "@/components/UI/SeachBar";
+import SearchBar from "@/components/UI/SearchBar";
 
 interface UserRow {
   name: string;
