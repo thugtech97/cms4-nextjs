@@ -1,6 +1,7 @@
 // pages/dashboard/news.tsx
 import AdminLayout from "@/components/Layout/AdminLayout";
 import DataTable, { Column } from "@/components/UI/DataTable";
+import SearchBar from "@/components/UI/SeachBar";
 
 interface NewsRow {
   title: string;
@@ -92,19 +93,7 @@ function ManageNews() {
     <div>
       <h3 className="mb-3">Manage News</h3>
 
-      <div className="d-flex justify-content-between mb-3">
-        <div>
-          <button className="btn btn-outline-secondary me-2">Filters</button>
-          <button className="btn btn-outline-secondary">Actions</button>
-        </div>
-
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Search News"
-          style={{ maxWidth: 260 }}
-        />
-      </div>
+      <SearchBar placeholder="Search News" />
 
       <DataTable<NewsRow> columns={columns} data={newsData} itemsPerPage={10} />
     </div>

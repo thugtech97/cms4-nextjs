@@ -1,6 +1,7 @@
 // pages/dashboard/users.tsx
 import AdminLayout from "@/components/Layout/AdminLayout";
 import DataTable, { Column } from "@/components/UI/DataTable";
+import SearchBar from "@/components/UI/SeachBar";
 
 interface UserRow {
   name: string;
@@ -92,19 +93,7 @@ function ManageUsers() {
     <div>
       <h3 className="mb-3">Manage Users</h3>
 
-      <div className="d-flex justify-content-between mb-3">
-        <div>
-          <button className="btn btn-outline-secondary me-2">Filters</button>
-          <button className="btn btn-outline-secondary">Actions</button>
-        </div>
-
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Search Users"
-          style={{ maxWidth: 260 }}
-        />
-      </div>
+      <SearchBar placeholder="Search Users" />
 
       <DataTable<UserRow> columns={columns} data={users} itemsPerPage={10} />
     </div>

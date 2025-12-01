@@ -1,6 +1,7 @@
 // pages/dashboard/albums.tsx
 import AdminLayout from "@/components/Layout/AdminLayout";
 import DataTable, { Column } from "@/components/UI/DataTable";
+import SearchBar from "@/components/UI/SeachBar";
 
 interface AlbumRow {
   name: string;
@@ -48,7 +49,6 @@ const columns: Column<AlbumRow>[] = [
     render: (row) => (
       <div>
         <span className="fw-bold text-primary">{row.name}</span>
-        <div style={{ fontSize: "0.8rem", color: "#6c757d" }}>{row.url}</div>
       </div>
     ),
   },
@@ -85,19 +85,7 @@ function ManageAlbums() {
     <div>
       <h3 className="mb-3">Manage Albums</h3>
 
-      <div className="d-flex justify-content-between mb-3">
-        <div>
-          <button className="btn btn-outline-secondary me-2">Filters</button>
-          <button className="btn btn-outline-secondary">Actions</button>
-        </div>
-
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Search by Album"
-          style={{ maxWidth: 260 }}
-        />
-      </div>
+      <SearchBar placeholder="Search by Album" />
 
       <DataTable<AlbumRow> columns={columns} data={albums} itemsPerPage={10} />
     </div>

@@ -1,5 +1,6 @@
 import AdminLayout from "@/components/Layout/AdminLayout";
 import DataTable, { Column } from "@/components/UI/DataTable";
+import SearchBar from "@/components/UI/SeachBar";
 
 interface PageRow {
   title: string;
@@ -83,19 +84,7 @@ export default function ManagePages() {
     <div>
       <h3 className="mb-3">Manage Pages</h3>
 
-      <div className="d-flex justify-content-between mb-3">
-        <div>
-          <button className="btn btn-outline-secondary me-2">Filters</button>
-          <button className="btn btn-outline-secondary">Actions</button>
-        </div>
-
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Search by Title"
-          style={{ maxWidth: 260 }}
-        />
-      </div>
+      <SearchBar placeholder="Search by Title" />
 
       <DataTable<PageRow> columns={columns} data={pages} itemsPerPage={10} />
     </div>

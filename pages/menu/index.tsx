@@ -1,6 +1,7 @@
 // pages/dashboard/menus.tsx
 import AdminLayout from "@/components/Layout/AdminLayout";
 import DataTable, { Column } from "@/components/UI/DataTable";
+import SearchBar from "@/components/UI/SeachBar";
 
 interface MenuRow {
   name: string;
@@ -76,19 +77,7 @@ function ManageMenus() {
     <div>
       <h3 className="mb-3">Manage Menus</h3>
 
-      <div className="d-flex justify-content-between mb-3">
-        <div>
-          <button className="btn btn-outline-secondary me-2">Filters</button>
-          <button className="btn btn-outline-secondary">Actions</button>
-        </div>
-
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Search Menus"
-          style={{ maxWidth: 260 }}
-        />
-      </div>
+      <SearchBar placeholder="Search Menus" />
 
       <DataTable<MenuRow> columns={columns} data={menus} itemsPerPage={10} />
     </div>
