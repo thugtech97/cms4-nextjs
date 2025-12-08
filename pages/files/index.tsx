@@ -1,7 +1,13 @@
 import AdminLayout from '@/components/Layout/AdminLayout'
+import FileManagerUI from '@/components/UI/FileManager'
 
-export default function FileManager() {
-  return <h1>File Manager</h1>
+export default function FileManagerPage() {
+  return (
+    <div>
+      <h3 className="mb-3">File Manager</h3>
+      <FileManagerUI/>
+    </div>
+  )
 }
 
-FileManager.Layout = AdminLayout
+FileManagerPage.Layout = AdminLayout

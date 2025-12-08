@@ -1,61 +1,42 @@
+export default function RecentActivity() {
 
+  return (
+    <div className="card shadow-sm border-0">
+      <div className="card-header bg-primary text-white">
+        <h4 className="mb-0">My Recent Activities</h4>
+      </div>
 
-export default function RecentActivity(){
+      <ul className="list-group list-group-flush p-3">
 
-    return(
-        <div>
-            <h4>My Recent Activities</h4>
-          <ul className="list-group">
-            <li
-              className="list-group-item"
-              style={{
-                backgroundColor: '#f8f9fa',
-                border: '1px solid #ddd',
-                padding: '15px',
-                borderRadius: '8px',
-                marginBottom: '10px',
-              }}
-            >
-              <strong>Adminz</strong> updated the settings copyright at 22 hours ago
-            </li>
-            <li
-              className="list-group-item"
-              style={{
-                backgroundColor: '#f8f9fa',
-                border: '1px solid #ddd',
-                padding: '15px',
-                borderRadius: '8px',
-                marginBottom: '10px',
-              }}
-            >
-              <strong>Adminz</strong> updated the page contents at Mar 14, 2025 3:15 PM
-            </li>
-            <li
-              className="list-group-item"
-              style={{
-                backgroundColor: '#f8f9fa',
-                border: '1px solid #ddd',
-                padding: '15px',
-                borderRadius: '8px',
-                marginBottom: '10px',
-              }}
-            >
-              <strong>Adminz</strong> deleted a page at Mar 14, 2025 3:12 PM
-            </li>
-            <li
-              className="list-group-item"
-              style={{
-                backgroundColor: '#f8f9fa',
-                border: '1px solid #ddd',
-                padding: '15px',
-                borderRadius: '8px',
-                marginBottom: '10px',
-              }}
-            >
-              <strong>Adminz</strong> updated the page contents at Mar 14, 2025 3:11 PM
-            </li>
-            {/* Add more activities here */}
-          </ul>
-        </div>
-    )
+        <li className="list-group-item rounded mb-2 border bg-light px-3 py-3">
+          <div className="fw-semibold">Adminz</div>
+          <div className="text-muted small">
+            updated the settings copyright • 22 hours ago
+          </div>
+        </li>
+
+        <li className="list-group-item rounded mb-2 border bg-light px-3 py-3">
+          <div className="fw-semibold">Adminz</div>
+          <div className="text-muted small">
+            updated the page contents • Mar 14, 2025 3:15 PM
+          </div>
+        </li>
+
+        <li className="list-group-item rounded mb-2 border bg-light px-3 py-3">
+          <div className="fw-semibold">Adminz</div>
+          <div className="text-muted small">
+            deleted a page • Mar 14, 2025 3:12 PM
+          </div>
+        </li>
+
+        <li className="list-group-item rounded mb-2 border bg-light px-3 py-3">
+          <div className="fw-semibold">Adminz</div>
+          <div className="text-muted small">
+            updated the page contents • Mar 14, 2025 3:11 PM
+          </div>
+        </li>
+
+      </ul>
+    </div>
+  );
 }
