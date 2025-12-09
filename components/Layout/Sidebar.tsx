@@ -17,7 +17,7 @@ export default function Sidebar() {
   const user = {
     name: "Thugtech97",
     role: "Admin",
-    avatar: "https://avatars.githubusercontent.com/u/34189306?s=96&v=4"
+    avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTokZliYkKkA5G-4WfbuaNpKj5f9PYnTUPLA&s"
   };
 
   const isActive = (href: string) => pathname === href;

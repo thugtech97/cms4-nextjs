@@ -65,7 +65,7 @@ function LoginPage() {
 LoginPage.Layout = ({ children }: { children: React.ReactNode }) => (
   <AuthLayout
     title="Login"
-    imageUrl="https://t3.ftcdn.net/jpg/02/62/71/08/360_F_262710803_CAKuDCLCdRsNLRhyI6hollZZmQrziJrk.jpg"
+    imageUrl="https://img.freepik.com/premium-photo/light-indigo-black-abstract-3d-geometric-background-design_851755-368825.jpg"
   >
     {children}
   </AuthLayout>
