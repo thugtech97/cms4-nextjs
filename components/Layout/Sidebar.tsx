@@ -39,9 +39,9 @@ export default function Sidebar() {
       label: "🖼️ Banners", 
       href: "/banners",
       children: [
-        { label: "• Manage Home Banner", href: "/banners" },
-        { label: "• Create Subpage Banners", href: "" },
-        { label: "• Create an Album", href: ""}
+        { label: "• Manage Home Banner", href: "/banners/home" },
+        { label: "• Manage Subpage Banners", href: "/banners" },
+        { label: "• Create an Album", href: "/banners/create"}
       ] 
     },
     { label: "📁 Files", href: "/files" },
@@ -50,7 +50,7 @@ export default function Sidebar() {
       href: "/menu",
       children: [
         { label: "• Manage Menu", href: "/menu" },
-        { label: "• Create a Menu", href: "" },
+        { label: "• Create a Menu", href: "/menu/create" },
       ]
     },
     { 
@@ -58,9 +58,9 @@ export default function Sidebar() {
       href: "/news",
       children: [
         { label: "• Manage News", href: "/news" },
-        { label: "• Create a News", href: "" },
-        { label: "• Manage Categories", href: ""},
-        { label: "• Create a Category", href: ""}
+        { label: "• Create a News", href: "/news/create" },
+        { label: "• Manage Categories", href: "/news/category_index"},
+        { label: "• Create a Category", href: "/news/category_create"}
       ]
     },
     { 
@@ -77,7 +77,7 @@ export default function Sidebar() {
       href: "/users",
       children: [
         { label: "• Manage Users", href: "/users" },
-        { label: "• Create a User", href: "" },
+        { label: "• Create a User", href: "/users/create" },
       ]
     },
     { 

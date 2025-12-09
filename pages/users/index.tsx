@@ -90,7 +90,7 @@ const columns: Column<UserRow>[] = [
 
 function ManageUsers() {
   return (
-    <div>
+    <div className="container">
       <h3 className="mb-3">Manage Users</h3>
 
       <SearchBar placeholder="Search Users" />

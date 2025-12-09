@@ -81,7 +81,7 @@ export default function ManagePages() {
   ];
 
   return (
-    <div>
+    <div className="container">
       <h3 className="mb-3">Manage Pages</h3>
 
       <SearchBar placeholder="Search by Title" />

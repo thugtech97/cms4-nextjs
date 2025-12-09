@@ -23,7 +23,7 @@ function SettingsPage() {
   };
 
   return (
-    <div>
+    <div className="container">
       <h3 className="mb-4">Account Settings</h3>
 
       <div

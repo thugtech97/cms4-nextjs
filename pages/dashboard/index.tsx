@@ -5,7 +5,7 @@ import StatsCards from '@/components/UI/StatsCards';
 
 export default function DashboardIndex() {
   return (
-    <div>
+    <div className="container">
       <h3 className="mb-4">
         Welcome, Adminz!
       </h3>

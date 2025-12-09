@@ -74,7 +74,7 @@ const columns: Column<MenuRow>[] = [
 
 function ManageMenus() {
   return (
-    <div>
+    <div className="container">
       <h3 className="mb-3">Manage Menus</h3>
 
       <SearchBar placeholder="Search Menus" />

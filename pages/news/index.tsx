@@ -90,7 +90,7 @@ const columns: Column<NewsRow>[] = [
 
 function ManageNews() {
   return (
-    <div>
+    <div className="container">
       <h3 className="mb-3">Manage News</h3>
 
       <SearchBar placeholder="Search News" />

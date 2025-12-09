@@ -17,7 +17,7 @@ export default function TinyEditor({ initialValue, onChange }: TinyEditorProps) 
       onInit={(evt, editor) => (editorRef.current = editor)}
       initialValue={initialValue || "<p>Start typing...</p>"}
       init={{
-        height: 500,
+        height: 1000,
         menubar: true,
         plugins: [
           "advlist", "autolink", "lists", "link", "image", "charmap",

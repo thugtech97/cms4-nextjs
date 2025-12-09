@@ -82,7 +82,7 @@ const columns: Column<AlbumRow>[] = [
 
 function ManageAlbums() {
   return (
-    <div>
+    <div className="container">
       <h3 className="mb-3">Manage Albums</h3>
 
       <SearchBar placeholder="Search by Album" />

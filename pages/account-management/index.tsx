@@ -1,7 +1,11 @@
 import AdminLayout from '@/components/Layout/AdminLayout'
 
 export default function DashboardIndex() {
-  return <h1>Account Management</h1>
+  return (
+    <div className="container">
+      <h3>Account Management</h3>
+    </div>
+  )
 }
 
 DashboardIndex.Layout = AdminLayout

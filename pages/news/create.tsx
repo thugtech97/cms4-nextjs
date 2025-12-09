@@ -2,16 +2,16 @@ import AdminLayout from "@/components/Layout/AdminLayout";
 import { useState } from "react";
 import TinyEditor from "@/components/UI/Editor";
 
-export default function CreatePage() {
+export default function CreateNews() {
   const [visibility, setVisibility] = useState(true); // Public by default
 
   return (
     <div className="container">
-      <h3 className="mb-4">Create a Page</h3>
+      <h3 className="mb-4">Create a News</h3>
 
       {/* Page Details */}
       <div className="card mb-4">
-        <div className="card-header fw-bold">Page Details</div>
+        <div className="card-header fw-bold">News Details</div>
         <div className="card-body">
 
           <div className="mb-3">
@@ -120,7 +120,7 @@ export default function CreatePage() {
       </div>
 
       <div className="card mb-4">
-        <div className="card-header fw-bold">Manage SEO</div>
+        <div className="card-header fw-bold">News SEO</div>
         <div className="card-body">
           {/* SEO Title */}
           <div className="mb-3">
@@ -148,4 +148,4 @@ export default function CreatePage() {
   );
 }
 
-CreatePage.Layout = AdminLayout;
+CreateNews.Layout = AdminLayout;
