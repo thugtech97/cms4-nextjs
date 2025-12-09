@@ -6,7 +6,7 @@ function CreateNewsCategory() {
   const [categoryName, setCategoryName] = useState("");
 
   return (
-    <div className="">
+    <div className="container">
       <h3 className="mb-4">Create News Category</h3>
 
       <div className="form-group mb-3">

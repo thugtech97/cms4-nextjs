@@ -30,7 +30,7 @@ function CreateMenu() {
   };
 
   return (
-    <div className="">
+    <div className="container">
       <h3 className="mb-4">Create a Menu</h3>
 
       <div className="row mb-3">
