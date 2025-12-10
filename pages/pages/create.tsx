@@ -8,8 +8,7 @@ export default function CreatePage() {
   return (
     <div className="container">
       <h3 className="mb-4">Create a Page</h3>
-
-      {/* Page Details */}
+      
       <div className="card mb-4">
         <div className="card-header fw-bold">Page Details</div>
         <div className="card-body">
