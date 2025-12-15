@@ -1,36 +1,14 @@
-{/**
+import { Filemanager } from "@svar-ui/react-filemanager";
+import "@svar-ui/react-filemanager/all.css";
+import { files } from "@/components/filemanager/data";
+import { Willow } from "@svar-ui/react-filemanager";
 
-"use client";
-
-import { useState } from "react";
-import FileManager from "react-file-manager";
-
-export default function FileManagerUI() {
-    
-  const [files, setFiles] = useState([
-    {
-      id: "1",
-      name: "Documents",
-      type: "folder",
-      modified: new Date(),
-    },
-    {
-      id: "2",
-      name: "Images",
-      type: "folder",
-      modified: new Date(),
-    },
-    {
-      id: "3",
-      name: "photo.png",
-      type: "file",
-      modified: new Date(),
-      size: 1024,
-    },
-  ]);
+export default function FileManagerUI(){
   return (
-    <div>
+    <div className="filemanager">
+      <Willow>
+        <Filemanager data={files} mode="cards" />
+      </Willow>
     </div>
-  );
+  )
 }
-*/}

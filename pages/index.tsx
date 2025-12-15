@@ -11,65 +11,74 @@ function LoginPage() {
     e.preventDefault();
 
     if (email && password) {
-      console.log("Login successful:", { email, password });
       router.push("/dashboard");
-    } else {
-      alert("Please enter email and password");
     }
   };
 
   return (
-    <form onSubmit={handleLogin}>
-      <div className="mb-3">
-        <input
-          type="email"
-          className="form-control"
-          id="email"
-          placeholder="Enter email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-      </div>
+    <>
+      <p className="text-muted mb-4" style={{ fontSize: "0.9rem" }}>
+        Welcome to Example Site Admin Portal.
+        <br />
+        Please sign in to continue.
+      </p>
 
-      <div className="mb-3">
-        <input
-          type="password"
-          className="form-control"
-          id="password"
-          placeholder="Enter password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </div>
-
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <div>
-          <input type="checkbox" id="remember" className="form-check-input me-1" />
-          <label htmlFor="remember" className="form-check-label">Remember me</label>
+      <form onSubmit={handleLogin}>
+        {/* Email */}
+        <div className="mb-3">
+          <label className="form-label">
+            <span className="text-danger">*</span> Email
+          </label>
+          <input
+            type="email"
+            className="form-control"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
-        <a href="/forgot-password" className="text-decoration-none small">Forgot password?</a>
-      </div>
 
-      <button type="submit" className="btn btn-primary w-100">Login</button>
+        {/* Password */}
+        <div className="mb-4">
+          <label className="form-label">
+            <span className="text-danger">*</span> Password
+          </label>
+          <input
+            type="password"
+            className="form-control"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
 
-      <div className="text-center mt-3">
-        <span>Don't have an account? </span>
-        <a href="/register" className="text-decoration-none">Register</a>
+        {/* Buttons */}
+        <div className="d-flex gap-2">
+          <button type="submit" className="btn btn-primary w-50">
+            Log In
+          </button>
+
+          <a href="/forgot-password" className="btn btn-info text-white w-50">
+            Forgot Password
+          </a>
+        </div>
+      </form>
+
+      {/* Footer */}
+      <div
+        className="text-center text-muted mt-4"
+        style={{ fontSize: "0.75rem" }}
+      >
+        Admin Portal v1.0 · Developed by WebFocus Solutions, Inc. © 2025
       </div>
-    </form>
+    </>
   );
 }
 
 LoginPage.Layout = ({ children }: { children: React.ReactNode }) => (
-  <AuthLayout
-    title="Login"
-    imageUrl="https://img.freepik.com/premium-photo/light-indigo-black-abstract-3d-geometric-background-design_851755-368825.jpg"
-  >
+  <AuthLayout title="Login" imageUrl="https://img.freepik.com/premium-photo/light-indigo-black-abstract-3d-geometric-background-design_851755-368825.jpg">
     {children}
   </AuthLayout>
 );
-
 
 export default LoginPage;
