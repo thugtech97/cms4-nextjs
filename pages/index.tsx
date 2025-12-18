@@ -1,17 +1,26 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
 import AuthLayout from "@/components/Layout/AuthLayout";
+import { login } from "@/services/authService";  // Import the login function
 
 function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (email && password) {
-      router.push("/dashboard");
+      try {
+        console.log("Payload:", { email, password });
+
+        await login(email, password);
+        router.push("/dashboard");
+      } catch (error: any) {
+        setErrorMessage(error.message || "Login failed, please try again");
+      }
     }
   };
 
@@ -22,6 +31,12 @@ function LoginPage() {
         <br />
         Please sign in to continue.
       </p>
+
+      {errorMessage && (
+        <div className="alert alert-danger" role="alert">
+          {errorMessage}
+        </div>
+      )}
 
       <form onSubmit={handleLogin}>
         {/* Email */}
