@@ -111,9 +111,16 @@ export default function Sidebar() {
       </div>
 
       <div className="mb-4">
-        <Link href="/" className="nav-link text-white p-0 text-decoration-none d-flex align-items-center">
-          🌐 View Website
+        <Link href="/public" passHref legacyBehavior>
+          <a
+            className="nav-link text-white p-0 text-decoration-none d-flex align-items-center"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            🌐 View Website
+          </a>
         </Link>
+
       </div>
 
       <div className="mb-3 text-uppercase text-white small fw-bold">
