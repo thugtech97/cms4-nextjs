@@ -30,11 +30,8 @@ axiosInstance.interceptors.response.use(
     loading.finish();
 
     if (error.response?.status === 401) {
-      if (
-        typeof window !== "undefined" &&
-        window.location.pathname !== "/"
-      ) {
-        window.location.href = "/";
+      if (typeof window !== "undefined" && window.location.pathname !== "/") {
+        //window.location.href = "/";
       }
     }
 
