@@ -107,4 +107,8 @@ function CreateAlbum() {
 
 CreateAlbum.Layout = AdminLayout;
 
+export async function getServerSideProps() {
+  return { props: {} };
+}
+
 export default CreateAlbum;

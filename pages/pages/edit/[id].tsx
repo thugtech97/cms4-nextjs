@@ -4,7 +4,7 @@ import TinyEditor from "@/components/UI/Editor";
 import { getPageById, updatePage } from "@/services/pageService";
 import { useRouter } from "next/router";
 
-export default function EditPage() {
+function EditPage() {
   const router = useRouter();
   const { id } = router.query;
 
@@ -179,3 +179,9 @@ export default function EditPage() {
 }
 
 EditPage.Layout = AdminLayout;
+
+export async function getServerSideProps() {
+  return { props: {} };
+}
+
+export default EditPage;

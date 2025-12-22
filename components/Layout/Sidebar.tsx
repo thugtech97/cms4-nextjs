@@ -111,16 +111,14 @@ export default function Sidebar() {
       </div>
 
       <div className="mb-4">
-        <Link href="/public" passHref legacyBehavior>
-          <a
-            className="nav-link text-white p-0 text-decoration-none d-flex align-items-center"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            🌐 View Website
-          </a>
+        <Link
+          href="/public"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="nav-link text-white p-0 text-decoration-none d-flex align-items-center"
+        >
+          🌐 View Website
         </Link>
-
       </div>
 
       <div className="mb-3 text-uppercase text-white small fw-bold">
@@ -136,7 +134,7 @@ export default function Sidebar() {
                 <button
                   onClick={() => toggleMenu(item.href)}
                   className={`nav-link text-white mb-2 rounded w-100 text-start border-0 bg-transparent ${
-                    pathname.startsWith(item.href) ? "active bg-primary" : ""
+                    pathname?.startsWith(item.href) ? "active bg-primary" : ""
                   }`}
                 >
                   {item.label}
