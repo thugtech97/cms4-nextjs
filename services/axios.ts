@@ -49,7 +49,7 @@ axiosInstance.interceptors.response.use(
 const setCsrfCookie = async () => {
   try {
     await axios.get(
-      API_URL+"/sanctum/csrf-cookie",
+      process.env.NEXT_PUBLIC_API_URL+"/sanctum/csrf-cookie",
       {
         withCredentials: true,
         headers: {
