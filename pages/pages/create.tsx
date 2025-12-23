@@ -85,8 +85,8 @@ export default function CreatePage() {
           <div className="mb-3">
             <label className="form-label">Page Content</label>
             <TinyEditor
-              initialValue={content} // ✅ default content shown
-              onChange={(html: string) => setContent(html)}
+              value={content}
+              onChange={setContent}
             />
           </div>
 

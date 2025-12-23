@@ -4,35 +4,58 @@ import { Editor } from "@tinymce/tinymce-react";
 import { useRef } from "react";
 
 interface TinyEditorProps {
-  initialValue?: string;
-  onChange: (content: string, editor?: any) => void;
+  value?: string;
+  onChange: (content: string) => void;
 }
 
-export default function TinyEditor({ initialValue, onChange }: TinyEditorProps) {
-  const editorRef = useRef(null);
+export default function TinyEditor({ value, onChange }: TinyEditorProps) {
+  const editorRef = useRef<any>(null);
 
   return (
     <Editor
       apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
-      onInit={(evt, editor) => (editorRef.current = editor)}
-      initialValue={initialValue || "<p>Write your content here...</p>"}
+      value={value}
+      onInit={(_, editor) => (editorRef.current = editor)}
       init={{
         height: 1000,
         menubar: true,
+
         plugins: [
-          "advlist", "autolink", "lists", "link", "image", "charmap",
-          "preview", "anchor", "searchreplace", "visualblocks",
-          "code", "fullscreen", "insertdatetime", "media", "table",
-          "help", "wordcount"
+          "directionality",
+          "advlist",
+          "autolink",
+          "lists",
+          "link",
+          "image",
+          "media",
+          "table",
+          "insertdatetime",
+          "searchreplace",
+          "preview",
+          "fullscreen",
+          "code",
+          "help",
+          "wordcount",
         ],
+
         toolbar:
           "undo redo | blocks | " +
-          "bold italic underline | alignleft aligncenter alignright alignjustify | " +
-          "bullist numlist outdent indent | link image media | table | code preview",
-        images_upload_url: "/api/upload",
-        automatic_uploads: true,
+          "bold italic underline strikethrough | " +
+          "alignleft aligncenter alignright alignjustify | " +
+          "bullist numlist outdent indent | " +
+          "link image media table | " +
+          "ltr rtl | code preview fullscreen",
+
+        // 🔒 LOCK LTR FOREVER
+        content_style: `
+          html, body {
+            direction: ltr !important;
+            unicode-bidi: plaintext !important;
+            text-align: left !important;
+          }
+        `,
       }}
-      onEditorChange={onChange}
+      onEditorChange={(content) => onChange(content)}
     />
   );
 }

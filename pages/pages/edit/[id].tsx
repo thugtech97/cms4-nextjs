@@ -102,8 +102,8 @@ function EditPage() {
           <div className="mb-3">
             <label className="form-label">Page Content</label>
             <TinyEditor
-              initialValue={content}
-              onChange={(html: string) => setContent(html)}
+              value={content}
+              onChange={setContent}
             />
           </div>
 
