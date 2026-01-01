@@ -3,6 +3,8 @@ import { useState } from "react";
 import TinyEditor from "@/components/UI/Editor";
 import { createPage } from "@/services/pageService";
 import { useRouter } from "next/router";
+import { useEffect } from "react";
+import { getAlbums } from "@/services/albumService";
 
 const DEFAULT_CONTENT = ``;
 
@@ -13,6 +15,8 @@ export default function CreatePage() {
   const [label, setLabel] = useState("");
   const [content, setContent] = useState(DEFAULT_CONTENT);
   const [visibility, setVisibility] = useState(true);
+  const [albumId, setAlbumId] = useState<number | "">("");
+  const [albums, setAlbums] = useState<any[]>([]);
 
   // SEO
   const [seoTitle, setSeoTitle] = useState("");
@@ -30,12 +34,12 @@ export default function CreatePage() {
 
     try {
       setLoading(true);
-
       await createPage({
         name: title,
         label: label || undefined,
+        album_id: albumId || undefined,
         contents: content,
-        status: visibility ? "public" : "private",
+        status: visibility ? "published" : "private",
         meta_title: seoTitle || undefined,
         meta_description: seoDescription || undefined,
         meta_keyword: seoKeywords || undefined,
@@ -53,6 +57,15 @@ export default function CreatePage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    getAlbums({ page: 1, per_page: 1000 }) // big enough for dropdown
+      .then((res) => {
+        // adjust depending on your API structure
+        setAlbums(res.data.data ?? res.data);
+      })
+      .catch(() => setAlbums([]));
+  }, []);
 
   return (
     <div className="container">
@@ -83,6 +96,25 @@ export default function CreatePage() {
           </div>
 
           <div className="mb-3">
+            <label className="form-label">Album (optional)</label>
+            <select
+              className="form-select"
+              value={albumId}
+              onChange={(e) =>
+                setAlbumId(e.target.value ? Number(e.target.value) : 0)
+              }
+            >
+              <option value="0">— No Album —</option>
+              {albums.map((album) => (
+                <option key={album.id} value={album.id}>
+                  {album.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+
+          <div className="mb-3">
             <label className="form-label">Page Content</label>
             <TinyEditor
               value={content}
@@ -98,7 +130,7 @@ export default function CreatePage() {
               onChange={() => setVisibility(!visibility)}
             />
             <label className="form-check-label">
-              {visibility ? "Public" : "Private"}
+              {visibility ? "Published" : "Private"}
             </label>
           </div>
         </div>

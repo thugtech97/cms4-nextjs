@@ -1,89 +1,166 @@
-// pages/dashboard/menus.tsx
+import { useEffect, useState } from "react";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import DataTable, { Column } from "@/components/UI/DataTable";
 import SearchBar from "@/components/UI/SearchBar";
-
-interface MenuRow {
-  name: string;
-  status: string;
-  dateModified: string;
-}
-
-const menus: MenuRow[] = [
-  {
-    name: "Main Navigation",
-    status: "Active",
-    dateModified: "Mar 14, 2025 3:20 PM",
-  },
-  {
-    name: "Footer Menu",
-    status: "Active",
-    dateModified: "Mar 10, 2025 11:05 AM",
-  },
-  {
-    name: "Member Menu",
-    status: "Active",
-    dateModified: "Feb 22, 2025 4:31 PM",
-  },
-  {
-    name: "Provider Menu",
-    status: "Inactive",
-    dateModified: "Jan 15, 2025 9:17 AM",
-  },
-  {
-    name: "Legacy Menu",
-    status: "Inactive",
-    dateModified: "Dec 2, 2024 2:05 PM",
-  },
-];
-
-const columns: Column<MenuRow>[] = [
-  {
-    key: "select",
-    header: <input type="checkbox" aria-label="Select all rows" />,
-    render: () => <input type="checkbox" aria-label="Select row" />,
-  },
-  {
-    key: "name",
-    header: "Menu Name",
-    render: (row) => <span className="fw-bold text-primary">{row.name}</span>,
-  },
-  {
-    key: "status",
-    header: "Menu Status",
-  },
-  {
-    key: "dateModified",
-    header: "Date Modified",
-  },
-  {
-    key: "options",
-    header: "Options",
-    render: () => (
-      <>
-        <button className="btn btn-link p-0 me-2 text-secondary" title="Edit">
-          <i className="fas fa-edit" />
-        </button>
-        <button className="btn btn-link p-0 text-secondary" title="Settings">
-          <i className="fas fa-cogs" />
-        </button>
-      </>
-    ),
-  },
-];
+import PageSizeSelector from "@/components/UI/PageSizeSelector";
+import { getMenus, MenuRow, activateMenu } from "@/services/menuService";
+import { useRouter } from "next/router";
 
 function ManageMenus() {
+  const router = useRouter();
+
+  const [menus, setMenus] = useState<MenuRow[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+
+  /* ======================
+   * Fetch Menus
+   * ====================== */
+  const fetchMenus = async () => {
+    try {
+      setLoading(true);
+
+      const res = await getMenus({
+        search,
+        page: currentPage,
+        per_page: perPage,
+      });
+
+      setMenus(res.data.data);
+      setTotalPages(res.data.last_page); // ✅ FIXED
+    } catch (err) {
+      console.error("Failed to load menus", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleActivate = async (id: number) => {
+    try {
+      await activateMenu(id);
+      fetchMenus(); // refresh list
+    } catch (err) {
+      console.error("Failed to activate menu", err);
+      alert("Failed to activate menu");
+    }
+  };
+
+  /* ======================
+   * Effects
+   * ====================== */
+  useEffect(() => {
+    const timeout = setTimeout(fetchMenus, 400);
+    return () => clearTimeout(timeout);
+  }, [search, currentPage, perPage]);
+
+  /* ======================
+   * Columns
+   * ====================== */
+  const columns: Column<MenuRow>[] = [
+    {
+      key: "select",
+      header: <input type="checkbox" />,
+      render: () => <input type="checkbox" />,
+    },
+    {
+      key: "name",
+      header: "Menu Name",
+      render: (row) => (
+        <span className="fw-bold text-primary">{row.name}</span>
+      ),
+    },
+    {
+      key: "is_active",
+      header: "Menu Status",
+      render: (row) => (
+        <span
+          className={`badge ${
+            row.is_active ? "bg-success" : "bg-secondary"
+          }`}
+        >
+          {row.is_active ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      key: "updated_at",
+      header: "Date Modified",
+    },
+    {
+      key: "options",
+      header: "Options",
+      render: (row) => (
+        <>
+          {/* Edit */}
+          <button
+            className="btn btn-link p-0 me-2 text-secondary"
+            title="Edit"
+            onClick={() => router.push(`/menu/edit/${row.id}`)}
+          >
+            <i className="fas fa-edit" />
+          </button>
+
+          {/* Set Active */}
+          <button
+            className="btn btn-link p-0"
+            title={
+              row.is_active
+                ? "This menu is currently active"
+                : "Set as active menu"
+            }
+            onClick={() => handleActivate(row.id)}
+            style={{
+              color: row.is_active ? "#198754" : "#6c757d",
+              opacity: row.is_active ? 0.5 : 1,
+            }}
+          >
+            <i
+              className={`fas ${
+                row.is_active ? "fa-toggle-on" : "fa-toggle-off"
+              }`}
+            />
+          </button>
+        </>
+      ),
+    },
+  ];
+  
   return (
     <div className="container">
       <h3 className="mb-3">Manage Menus</h3>
 
-      <SearchBar placeholder="Search Menus" />
+      <SearchBar
+        placeholder="Search Menus"
+        value={search}
+        onChange={(value) => {
+          setSearch(value);
+          setCurrentPage(1);
+        }}
+      />
 
-      <DataTable<MenuRow> columns={columns} data={menus} itemsPerPage={10} />
+      <PageSizeSelector
+        value={perPage}
+        onChange={(value) => {
+          setPerPage(value);
+          setCurrentPage(1);
+        }}
+      />
+
+      <DataTable<MenuRow>
+        columns={columns}
+        data={menus}
+        loading={loading}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 }
 
 ManageMenus.Layout = AdminLayout;
-
 export default ManageMenus;

@@ -3,7 +3,11 @@
 import AdminLayout from "@/components/Layout/AdminLayout";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { getAllPages, createMenu } from "@/services/menuService";
+import {
+  getAllPages,
+  getMenuById,
+  updateMenu,
+} from "@/services/menuService";
 import PagesPanel from "@/components/MenuBuilder/PagesPanel";
 import StructurePanel from "@/components/MenuBuilder/StructurePanel";
 import { Page, MenuItem, FlatItem } from "@/components/MenuBuilder/types";
@@ -12,14 +16,17 @@ import {
   buildTree,
 } from "@/components/MenuBuilder/treeUtils";
 
-function CreateMenu() {
+function EditMenu() {
+  const router = useRouter();
+  const { id } = router.query;
+
   const [menuName, setMenuName] = useState("");
   const [pages, setPages] = useState<Page[]>([]);
   const [loadingPages, setLoadingPages] = useState(true);
+  const [loadingMenu, setLoadingMenu] = useState(true);
 
   const [checked, setChecked] = useState<number[]>([]);
   const [tree, setTree] = useState<MenuItem[]>([]);
-  const router = useRouter();
 
   /* ================= FETCH PAGES ================= */
   useEffect(() => {
@@ -34,6 +41,18 @@ function CreateMenu() {
       )
       .finally(() => setLoadingPages(false));
   }, []);
+
+  /* ================= FETCH MENU ================= */
+  useEffect(() => {
+    if (!id) return;
+
+    getMenuById(Number(id))
+      .then((res) => {
+        setMenuName(res.data.data.name);
+        setTree(res.data.data.items || []);
+      })
+      .finally(() => setLoadingMenu(false));
+  }, [id]);
 
   const flatItems = flattenTree(tree);
 
@@ -66,7 +85,7 @@ function CreateMenu() {
     setTree(buildTree(flat));
   };
 
-  /* ================= SAVE MENU ================= */
+  /* ================= UPDATE MENU ================= */
   const saveMenu = async () => {
     if (!menuName.trim()) {
       alert("Menu name is required");
@@ -74,23 +93,27 @@ function CreateMenu() {
     }
 
     try {
-      await createMenu({
+      await updateMenu(Number(id), {
         name: menuName,
         items: tree,
-        is_active: false,
+        //is_active: true,
       });
 
-      alert("Menu saved!");
-      router.push("/menu"); // ✅ redirect
+      alert("Menu updated!");
+      router.push("/menu");
     } catch (error) {
-      alert("Failed to save menu");
+      alert("Failed to update menu");
       console.error(error);
     }
   };
 
+  if (loadingMenu) {
+    return <div className="container">Loading menu...</div>;
+  }
+
   return (
     <div className="container">
-      <h3 className="mb-4">Create Menu</h3>
+      <h3 className="mb-4">Edit Menu</h3>
 
       {loadingPages && <div className="text-muted">Loading pages...</div>}
 
@@ -130,12 +153,11 @@ function CreateMenu() {
           onClick={saveMenu}
           disabled={!menuName.trim() || tree.length === 0}
         >
-          Save Menu
+          Update Menu
         </button>
         <button
           className="btn btn-outline-secondary"
-          type="button"
-          onClick={() => window.history.back()}
+          onClick={() => router.push("/menu")}
         >
           Cancel
         </button>
@@ -148,5 +170,5 @@ function CreateMenu() {
   );
 }
 
-CreateMenu.Layout = AdminLayout;
-export default CreateMenu;
+EditMenu.Layout = AdminLayout;
+export default EditMenu;

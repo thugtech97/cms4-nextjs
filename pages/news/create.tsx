@@ -59,7 +59,7 @@ export default function CreateNews() {
               onChange={() => setVisibility(!visibility)}
             />
             <label className="form-check-label" htmlFor="pageVisibility">
-              {visibility ? "Public" : "Private"}
+              {visibility ? "Published" : "Private"}
             </label>
           </div>
         </div>

@@ -1,14 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
+  webpack: (config) => {
+    config.watchOptions = {
+      poll: 1000,          // check for changes every 1s
+      aggregateTimeout: 300,
+    };
+    return config;
   },
-  allowedDevOrigins: [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://192.168.1.16:3000",
-  ],
 };
 
 export default nextConfig;

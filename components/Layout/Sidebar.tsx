@@ -112,7 +112,7 @@ export default function Sidebar() {
 
       <div className="mb-4">
         <Link
-          href="/public"
+          href="/public/home"
           target="_blank"
           rel="noopener noreferrer"
           className="nav-link text-white p-0 text-decoration-none d-flex align-items-center"

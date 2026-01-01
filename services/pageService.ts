@@ -6,7 +6,7 @@ export interface CreatePagePayload {
   parent_page_id?: number | null;
   album_id?: number | null;
   contents?: string;
-  status: "public" | "private" | "draft";
+  status: "published" | "private" | "draft";
   meta_title?: string;
   meta_description?: string;
   meta_keyword?: string;
@@ -18,7 +18,7 @@ export const createPage = async (payload: CreatePagePayload) => {
   return axiosInstance.post("/pages", payload);
 };
 
-export const getPages = (params?: { search?: string; page?: number }) => {
+export const getPages = (params?: {search?: string; page?: number; per_page?: number;}) => {
   return axiosInstance.get("/pages", { params });
 };
 

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import TinyEditor from "@/components/UI/Editor";
 import { getPageById, updatePage } from "@/services/pageService";
 import { useRouter } from "next/router";
+import { getAlbums } from "@/services/albumService";
 
 function EditPage() {
   const router = useRouter();
@@ -13,6 +14,8 @@ function EditPage() {
   const [label, setLabel] = useState("");
   const [content, setContent] = useState("");
   const [visibility, setVisibility] = useState(true);
+  const [albumId, setAlbumId] = useState<number | "">("");
+  const [albums, setAlbums] = useState<any[]>([]);
 
   // SEO
   const [seoTitle, setSeoTitle] = useState("");
@@ -32,14 +35,23 @@ function EditPage() {
 
         setTitle(page.name);
         setLabel(page.label || "");
+        setAlbumId(page.album_id ?? ""); // ✅ HERE
         setContent(page.contents);
-        setVisibility(page.status === "public");
+        setVisibility(page.status === "published");
         setSeoTitle(page.meta_title || "");
         setSeoDescription(page.meta_description || "");
         setSeoKeywords(page.meta_keyword || "");
       })
       .finally(() => setInitialLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    getAlbums({ page: 1, per_page: 1000 })
+      .then((res) => {
+        setAlbums(res.data.data ?? res.data);
+      })
+      .catch(() => setAlbums([]));
+  }, []);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -53,8 +65,9 @@ function EditPage() {
       await updatePage(Number(id), {
         name: title,
         label: label || undefined,
+        album_id: albumId, // ✅ ADD
         contents: content,
-        status: visibility ? "public" : "private",
+        status: visibility ? "published" : "private",
         meta_title: seoTitle || undefined,
         meta_description: seoDescription || undefined,
         meta_keyword: seoKeywords || undefined,
@@ -85,6 +98,7 @@ function EditPage() {
               type="text"
               className="form-control"
               value={title}
+              disabled={Number(id) == 1}
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
@@ -95,9 +109,31 @@ function EditPage() {
               type="text"
               className="form-control"
               value={label}
+              disabled={Number(id) == 1}
               onChange={(e) => setLabel(e.target.value)}
             />
           </div>
+
+          {Number(id) !== 1 && (
+            <div className="mb-3">
+              <label className="form-label">Album (optional)</label>
+              <select
+                className="form-select"
+                value={albumId}
+                onChange={(e) =>
+                  setAlbumId(e.target.value ? Number(e.target.value) : 0)
+                }
+              >
+                <option value="0">— No Album —</option>
+
+                {albums.map((album) => (
+                  <option key={album.id} value={album.id}>
+                    {album.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="mb-3">
             <label className="form-label">Page Content</label>
@@ -115,7 +151,7 @@ function EditPage() {
               onChange={() => setVisibility(!visibility)}
             />
             <label className="form-check-label">
-              {visibility ? "Public" : "Private"}
+              {visibility ? "Published" : "Private"}
             </label>
           </div>
         </div>

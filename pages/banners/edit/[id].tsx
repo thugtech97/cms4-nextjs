@@ -1,31 +1,31 @@
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import { BannerForm } from "@/schemas/banner";
 import { OptionItem, getOptions } from "@/services/optionService";
-import {
-  getAlbum,
-  createAlbum,
-  updateAlbum,
-} from "@/services/albumService";
+import { getAlbum, updateAlbum } from "@/services/albumService";
 
-const HOME_ALBUM_ID = 1;
+function EditAlbum() {
+  const router = useRouter();
+  const { id } = router.query;
 
-function HomeBanner() {
-  const [albumExists, setAlbumExists] = useState(true);
+  /* ======================
+   * State
+   * ====================== */
 
-  const [transitionIn, setTransitionIn] = useState("Fade In");
-  const [transitionOut, setTransitionOut] = useState("Fade Out");
-  const [duration, setDuration] = useState(5);
+  const [name, setName] = useState("");
+  const [transitionIn, setTransitionIn] = useState("");
+  const [transitionOut, setTransitionOut] = useState("");
+  const [duration, setDuration] = useState(2);
+
   const [banners, setBanners] = useState<BannerForm[]>([]);
 
   const [entranceOptions, setEntranceOptions] = useState<OptionItem[]>([]);
   const [exitOptions, setExitOptions] = useState<OptionItem[]>([]);
 
-
-  useEffect(() => {
-    loadAlbum();
-  }, []);
-
+  /* ======================
+   * Load options
+   * ====================== */
   useEffect(() => {
     getOptions({ type: "animation", field_type: "entrance" })
       .then((res: any) => setEntranceOptions(res.data.data));
@@ -34,14 +34,22 @@ function HomeBanner() {
       .then((res: any) => setExitOptions(res.data.data));
   }, []);
 
+  /* ======================
+   * Load album
+   * ====================== */
+  useEffect(() => {
+    if (!id) return;
+    loadAlbum(Number(id));
+  }, [id]);
 
-  const loadAlbum = async () => {
+  const loadAlbum = async (albumId: number) => {
     try {
-      const res = await getAlbum(HOME_ALBUM_ID);
+      const res = await getAlbum(albumId);
       const album = res.data;
 
-      setTransitionIn(album.transition_in);
-      setTransitionOut(album.transition_out);
+      setName(album.name);
+      setTransitionIn(String(album.transition_in));
+      setTransitionOut(String(album.transition_out));
       setDuration(album.transition);
 
       setBanners(
@@ -55,19 +63,15 @@ function HomeBanner() {
           alt: b.alt,
         }))
       );
-
-      setAlbumExists(true);
-    } catch (err: any) {
-      if (err.response?.status === 404) {
-        setAlbumExists(false);
-      }
+    } catch (err) {
+      alert("Album not found");
+      router.push("/banners");
     } finally {
-
     }
   };
 
   /* ======================
-   * Image Upload
+   * Image upload
    * ====================== */
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -79,12 +83,17 @@ function HomeBanner() {
     }));
 
     setBanners((prev) => [...prev, ...newBanners]);
-
     e.target.value = "";
   };
 
   const handleRemoveBanner = (index: number) => {
-    setBanners((prev) => prev.filter((_, i) => i !== index));
+    setBanners((prev) => {
+      const banner = prev[index];
+      if (banner.preview?.startsWith("blob:")) {
+        URL.revokeObjectURL(banner.preview);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const updateBanner = (
@@ -101,8 +110,13 @@ function HomeBanner() {
    * Save
    * ====================== */
   const handleSave = async () => {
-    const payload: any = {
-      name: "Home Banner",
+    if (!name || !transitionIn || !transitionOut) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    const payload : any = {
+      name,
       transition_in: transitionIn,
       transition_out: transitionOut,
       transition: duration,
@@ -115,40 +129,42 @@ function HomeBanner() {
         url: b.url,
         alt: b.alt,
         order: i,
-        image: b.image,
+        ...(b.image instanceof File ? { image: b.image } : {}),
       })),
     };
 
-    if (albumExists) {
-      await updateAlbum(HOME_ALBUM_ID, payload);
-    } else {
-      await createAlbum(payload);
-    }
-
-    await loadAlbum();
-    alert("Home banner updated successfully");
+    await updateAlbum(Number(id), payload);
+    router.push("/banners");
   };
 
-  /* ======================
-   * UI
-   * ====================== */
   return (
     <div className="container">
-      <h3 className="mb-4">Edit Home Banner</h3>
+      <h3 className="mb-4">Edit Album</h3>
 
+      {/* Album Name */}
       <div className="mb-3">
-        <label className="form-label">Album Name</label>
-        <input className="form-control" value="Home Banner" readOnly />
+        <label className="form-label">
+          Album Name <span className="text-danger">*</span>
+        </label>
+        <input
+          className="form-control"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
       </div>
 
+      {/* Transition In */}
       <div className="mb-3">
-        <label className="form-label">Transition In</label>
+        <label className="form-label">
+          Transition In <span className="text-danger">*</span>
+        </label>
         <select
           className="form-control"
           value={transitionIn}
           onChange={(e) => setTransitionIn(e.target.value)}
         >
-          {entranceOptions.map(opt => (
+          <option value="">Select transition</option>
+          {entranceOptions.map((opt) => (
             <option key={opt.id} value={opt.id}>
               {opt.name}
             </option>
@@ -156,14 +172,18 @@ function HomeBanner() {
         </select>
       </div>
 
+      {/* Transition Out */}
       <div className="mb-3">
-        <label className="form-label">Transition Out</label>
+        <label className="form-label">
+          Transition Out <span className="text-danger">*</span>
+        </label>
         <select
           className="form-control"
           value={transitionOut}
           onChange={(e) => setTransitionOut(e.target.value)}
         >
-          {exitOptions.map(opt => (
+          <option value="">Select transition</option>
+          {exitOptions.map((opt) => (
             <option key={opt.id} value={opt.id}>
               {opt.name}
             </option>
@@ -171,12 +191,15 @@ function HomeBanner() {
         </select>
       </div>
 
+      {/* Duration */}
       <div className="mb-3">
-        <label className="form-label">Transition Duration (seconds)</label>
+        <label className="form-label">
+          Transition Duration (seconds)
+        </label>
         <input
           type="range"
           className="form-range"
-          min={1}
+          min={2}
           max={10}
           value={duration}
           onChange={(e) => setDuration(Number(e.target.value))}
@@ -184,26 +207,9 @@ function HomeBanner() {
         <small className="text-muted">{duration}s</small>
       </div>
 
-      {/* Banner Type */}
-      <div className="mb-3">
-        <label className="form-label">Banner Type</label>
-        <div className="form-check">
-          <input
-            type="radio"
-            className="form-check-input"
-            id="imageBanner"
-            checked
-            readOnly
-          />
-          <label className="form-check-label" htmlFor="imageBanner">
-            Image
-          </label>
-        </div>
-      </div>
-
       {/* Upload Images */}
       <div className="mb-4">
-        <label className="form-label">Banner Images</label>
+        <label className="form-label">Album Images</label>
         <button
           type="button"
           className="btn btn-outline-secondary d-block"
@@ -230,8 +236,7 @@ function HomeBanner() {
               <img
                 src={banner.preview}
                 className="card-img-top"
-                alt="Banner"
-                style={{ height: "200px", objectFit: "cover" }}
+                style={{ height: 200, objectFit: "cover" }}
               />
 
               <div className="card-body">
@@ -257,45 +262,11 @@ function HomeBanner() {
                   />
                 </div>
 
-                <div className="mb-2">
-                  <label className="form-label">Button Text</label>
-                  <input
-                    className="form-control"
-                    value={banner.button_text || ""}
-                    onChange={(e) =>
-                      updateBanner(index, "button_text", e.target.value)
-                    }
-                  />
-                </div>
-
-                <div className="mb-2">
-                  <label className="form-label">URL</label>
-                  <input
-                    type="url"
-                    className="form-control"
-                    value={banner.url || ""}
-                    onChange={(e) =>
-                      updateBanner(index, "url", e.target.value)
-                    }
-                  />
-                </div>
-
-                <div className="mb-2">
-                  <label className="form-label">Alt Text</label>
-                  <input
-                    className="form-control"
-                    value={banner.alt || ""}
-                    onChange={(e) =>
-                      updateBanner(index, "alt", e.target.value)
-                    }
-                  />
-                </div>
-
                 <button
                   className="btn btn-outline-danger btn-sm mt-2"
                   onClick={() => handleRemoveBanner(index)}
                 >
-                  <i className="fa fa-trash"></i> Remove
+                  Remove
                 </button>
               </div>
             </div>
@@ -308,10 +279,16 @@ function HomeBanner() {
         <button className="btn btn-primary" onClick={handleSave}>
           Update Album
         </button>
+        <button
+          className="btn btn-outline-secondary"
+          onClick={() => router.back()}
+        >
+          Cancel
+        </button>
       </div>
     </div>
   );
 }
 
-HomeBanner.Layout = AdminLayout;
-export default HomeBanner;
+EditAlbum.Layout = AdminLayout;
+export default EditAlbum;

@@ -4,7 +4,7 @@ import SearchBar from "@/components/UI/SearchBar";
 import { useEffect, useState } from "react";
 import { getPages } from "@/services/pageService";
 import { useRouter } from "next/router";
-import { loading } from "@/plugins/loading";
+import PageSizeSelector from "@/components/UI/PageSizeSelector";
 
 interface PageRow {
   id: number;
@@ -21,22 +21,40 @@ export default function ManagePages() {
   const [pages, setPages] = useState<PageRow[]>([]);
   const [isLoading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [perPage, setPerPage] = useState(10);
 
   const fetchPages = async () => {
     try {
       setLoading(true);
-      const res = await getPages({ search });
+
+      const res = await getPages({
+        search,
+        page: currentPage,
+        per_page: perPage,
+      });
+
       setPages(res.data.data);
-    } catch (error) {
-      console.error("Failed to load pages", error);
+      setCurrentPage(res.data.meta.current_page);
+      setTotalPages(res.data.meta.last_page);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPages();
+    const timeout = setTimeout(() => {
+      setCurrentPage(1);
+      fetchPages();
+    }, 400);
+
+    return () => clearTimeout(timeout);
   }, [search]);
+
+  useEffect(() => {
+    fetchPages();
+  }, [currentPage, perPage]);
 
   const columns: Column<PageRow>[] = [
     {
@@ -104,15 +122,30 @@ export default function ManagePages() {
 
       <SearchBar
         placeholder="Search by Title"
-        onChange={(value: string) => setSearch(value)}
+        onChange={(value: string) => {
+          setSearch(value);
+          setCurrentPage(1);
+        }}
+      />
+      
+      <PageSizeSelector
+        value={perPage}
+        onChange={(value) => {
+          setPerPage(value);
+          setCurrentPage(1);
+        }}
       />
 
       <DataTable<PageRow>
         columns={columns}
         data={pages}
         loading={isLoading}
-        itemsPerPage={10}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
       />
+
+
     </div>
   );
 }

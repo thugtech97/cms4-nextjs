@@ -35,7 +35,7 @@ export default function DataTable<T>({
     typeof onPageChange === "function";
 
   // Client-side fallback
-  const localCurrentPage = currentPage ?? 1;
+  const localCurrentPage = currentPage || 1;
   const localTotalPages = isServerPaginated
     ? totalPages
     : Math.ceil(data.length / itemsPerPage);
