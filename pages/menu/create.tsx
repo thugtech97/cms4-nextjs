@@ -7,6 +7,7 @@ import { getAllPages, createMenu } from "@/services/menuService";
 import PagesPanel from "@/components/MenuBuilder/PagesPanel";
 import StructurePanel from "@/components/MenuBuilder/StructurePanel";
 import { Page, MenuItem, FlatItem } from "@/components/MenuBuilder/types";
+import { toast } from "@/lib/toast";
 import {
   flattenTree,
   buildTree,
@@ -28,7 +29,7 @@ function CreateMenu() {
         setPages(
           res.map((p) => ({
             id: p.id,
-            title: p.label || p.name,
+            title: p.name,
           }))
         )
       )
@@ -69,7 +70,7 @@ function CreateMenu() {
   /* ================= SAVE MENU ================= */
   const saveMenu = async () => {
     if (!menuName.trim()) {
-      alert("Menu name is required");
+      toast.error("Menu name is required");
       return;
     }
 
@@ -80,10 +81,10 @@ function CreateMenu() {
         is_active: false,
       });
 
-      alert("Menu saved!");
+      toast.success("Menu saved!");
       router.push("/menu"); // ✅ redirect
     } catch (error) {
-      alert("Failed to save menu");
+      toast.error("Failed to save menu");
       console.error(error);
     }
   };

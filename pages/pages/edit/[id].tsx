@@ -4,6 +4,7 @@ import TinyEditor from "@/components/UI/Editor";
 import { getPageById, updatePage } from "@/services/pageService";
 import { useRouter } from "next/router";
 import { getAlbums } from "@/services/albumService";
+import { toast } from "@/lib/toast";
 
 function EditPage() {
   const router = useRouter();
@@ -55,7 +56,7 @@ function EditPage() {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      alert("Page title is required");
+      toast.error("Page title is required");
       return;
     }
 
@@ -73,12 +74,12 @@ function EditPage() {
         meta_keyword: seoKeywords || undefined,
       });
 
-      alert("Page updated successfully");
+      toast.success("Page updated successfully");
       router.push("/pages");
 
     } catch (error: any) {
       console.error(error);
-      alert(error?.response?.data?.message || "Failed to update page");
+      toast.error(error?.response?.data?.message || "Failed to update page");
     } finally {
       setLoading(false);
     }

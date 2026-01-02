@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import { BannerForm } from "@/schemas/banner";
 import { OptionItem, getOptions } from "@/services/optionService";
+import { toast } from "@/lib/toast";
 import {
   getAlbum,
   createAlbum,
@@ -126,7 +127,7 @@ function HomeBanner() {
     }
 
     await loadAlbum();
-    alert("Home banner updated successfully");
+    toast.success("Home banner updated successfully");
   };
 
   /* ======================

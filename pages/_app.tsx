@@ -1,6 +1,7 @@
 // pages/_app.tsx
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import React from "react";
 import Script from "next/script";

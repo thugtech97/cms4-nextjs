@@ -5,6 +5,7 @@ import { createPage } from "@/services/pageService";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { getAlbums } from "@/services/albumService";
+import { toast } from "@/lib/toast";
 
 const DEFAULT_CONTENT = ``;
 
@@ -28,7 +29,7 @@ export default function CreatePage() {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      alert("Page title is required");
+      toast.error("Page title is required");
       return;
     }
 
@@ -45,14 +46,14 @@ export default function CreatePage() {
         meta_keyword: seoKeywords || undefined,
       });
 
-      alert("Page created successfully");
+      toast.success("Page created successfully");
 
       // ✅ Redirect to pages list
       router.push("/pages");
 
     } catch (error: any) {
       console.error(error);
-      alert(error?.response?.data?.message || "Failed to create page");
+      toast.error(error?.response?.data?.message || "Failed to create page");
     } finally {
       setLoading(false);
     }

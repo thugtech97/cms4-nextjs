@@ -4,6 +4,7 @@ import RecentActivity from "@/components/UI/RecentActivity";
 import StatsCards from "@/components/UI/StatsCards";
 import { useEffect, useState } from "react";
 import { getDashboardStats } from "@/services/dashboardService";
+import { toast } from "@/lib/toast";
 
 export default function DashboardIndex() {
   const [stats, setStats] = useState({
@@ -12,6 +13,7 @@ export default function DashboardIndex() {
   });
 
   useEffect(() => {
+    //toast.success("Saved successfully");
     const fetchStats = async () => {
       try {
         const res = await getDashboardStats();

@@ -4,6 +4,7 @@ import AdminLayout from "@/components/Layout/AdminLayout";
 import { BannerForm } from "@/schemas/banner";
 import { OptionItem, getOptions } from "@/services/optionService";
 import { getAlbum, updateAlbum } from "@/services/albumService";
+import { toast } from "@/lib/toast";
 
 function EditAlbum() {
   const router = useRouter();
@@ -64,7 +65,7 @@ function EditAlbum() {
         }))
       );
     } catch (err) {
-      alert("Album not found");
+      toast.error("Album not found");
       router.push("/banners");
     } finally {
     }
@@ -111,7 +112,7 @@ function EditAlbum() {
    * ====================== */
   const handleSave = async () => {
     if (!name || !transitionIn || !transitionOut) {
-      alert("Please fill in all required fields.");
+      toast.error("Please fill in all required fields.");
       return;
     }
 

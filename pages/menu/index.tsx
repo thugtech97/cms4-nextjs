@@ -5,6 +5,7 @@ import SearchBar from "@/components/UI/SearchBar";
 import PageSizeSelector from "@/components/UI/PageSizeSelector";
 import { getMenus, MenuRow, activateMenu } from "@/services/menuService";
 import { useRouter } from "next/router";
+import { toast } from "@/lib/toast";
 
 function ManageMenus() {
   const router = useRouter();
@@ -45,7 +46,7 @@ function ManageMenus() {
       fetchMenus(); // refresh list
     } catch (err) {
       console.error("Failed to activate menu", err);
-      alert("Failed to activate menu");
+      toast.error("Failed to activate menu");
     }
   };
 

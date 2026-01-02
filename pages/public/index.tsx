@@ -1,4 +1,4 @@
-import LandingPageLayout from "@/components/Layout/LandingPageLayout";
+import LandingPageLayout from "@/components/Layout/GuestLayout";
 
 export default function HomePage() {
   return (

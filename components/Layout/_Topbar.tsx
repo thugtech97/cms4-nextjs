@@ -1,12 +1,13 @@
 import React from "react";
 import Link from "next/link";
+import Menu from "./_Menu";
 
 export default function LandingTopbar() {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
       <div className="container">
         <Link href="/" className="navbar-brand fw-bold">
-          MyPlatform
+          Cms5
         </Link>
 
         <button
@@ -15,26 +16,12 @@ export default function LandingTopbar() {
           data-bs-toggle="collapse"
           data-bs-target="#landingNavbar"
         >
-          <span className="navbar-toggler-icon"></span>
+          <span className="navbar-toggler-icon" />
         </button>
 
         <div className="collapse navbar-collapse" id="landingNavbar">
           <ul className="navbar-nav ms-auto mb-2 mb-lg-0 gap-lg-3">
-            <li className="nav-item">
-              <Link href="/public/home" className="nav-link">
-                Home
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link href="/public/about" className="nav-link">
-                About
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link href="#pricing" className="nav-link">
-                Pricing
-              </Link>
-            </li>
+            <Menu />
           </ul>
         </div>
       </div>

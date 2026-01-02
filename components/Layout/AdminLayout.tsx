@@ -1,6 +1,7 @@
 import React from 'react';
-import Sidebar from './Sidebar';
-import Topbar from './Topbar';
+import Sidebar from './_Sidebar';
+import Topbar from './_Topbar';
+import ToastHost from "@/components/UI/ToastHost";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -17,6 +18,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {children}
         </main>
       </div>
+
+      <ToastHost />
     </div>
   );
 }

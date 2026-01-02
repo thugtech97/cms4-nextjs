@@ -11,6 +11,7 @@ import {
 import PagesPanel from "@/components/MenuBuilder/PagesPanel";
 import StructurePanel from "@/components/MenuBuilder/StructurePanel";
 import { Page, MenuItem, FlatItem } from "@/components/MenuBuilder/types";
+import { toast } from "@/lib/toast";
 import {
   flattenTree,
   buildTree,
@@ -35,7 +36,7 @@ function EditMenu() {
         setPages(
           res.map((p) => ({
             id: p.id,
-            title: p.label || p.name,
+            title: p.name,
           }))
         )
       )
@@ -88,7 +89,7 @@ function EditMenu() {
   /* ================= UPDATE MENU ================= */
   const saveMenu = async () => {
     if (!menuName.trim()) {
-      alert("Menu name is required");
+      toast.error("Menu name is required");
       return;
     }
 
@@ -99,17 +100,13 @@ function EditMenu() {
         //is_active: true,
       });
 
-      alert("Menu updated!");
+      toast.success("Menu updated!");
       router.push("/menu");
     } catch (error) {
-      alert("Failed to update menu");
+      toast.error("Failed to update menu");
       console.error(error);
     }
   };
-
-  if (loadingMenu) {
-    return <div className="container">Loading menu...</div>;
-  }
 
   return (
     <div className="container">

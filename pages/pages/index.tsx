@@ -122,6 +122,7 @@ export default function ManagePages() {
 
       <SearchBar
         placeholder="Search by Title"
+        value={search}
         onChange={(value: string) => {
           setSearch(value);
           setCurrentPage(1);

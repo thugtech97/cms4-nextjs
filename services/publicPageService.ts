@@ -1,10 +1,33 @@
 import { axiosInstance } from "./axios";
 
+export interface PublicBanner {
+  id: number;
+  title?: string;
+  description?: string;
+  alt?: string;
+  image_url: string;
+  button_text?: string;
+  url?: string;
+  order: number;
+}
+
+export interface PublicAlbum {
+  id: number;
+  name: string;
+  type?: string;
+  banner_type?: string;
+  transition?: string;
+  transition_in?: string;
+  transition_out?: string;
+  banners: PublicBanner[];
+}
+
 export interface PublicPage {
   id: number;
   title: string;
   slug: string;
   content: string;
+  album?: PublicAlbum | null;
   meta?: {
     title?: string;
     description?: string;
@@ -14,4 +37,32 @@ export interface PublicPage {
 
 export const getPublicPageBySlug = (slug: string) => {
   return axiosInstance.get<PublicPage>(`/public/pages/${slug}`);
+};
+
+export interface PublicMenuItem {
+  id: number;
+  title: string;
+  slug: string;
+  parent_id?: number | null;
+  children?: PublicMenuItem[];
+}
+
+export interface PublicMenu {
+  id: number;
+  name: string;
+  items: PublicMenuItem[];
+}
+
+export const getActiveMenu = () => {
+  return axiosInstance.get<{ data: PublicMenu }>(`/public/menus/active`);
+};
+
+export interface PublicFooter {
+  id: number;
+  slug: string;
+  contents: string;
+}
+
+export const getFooter = () => {
+  return axiosInstance.get<{ data: PublicFooter }>(`/public/footer`);
 };

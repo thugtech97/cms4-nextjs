@@ -4,6 +4,7 @@ import AdminLayout from "@/components/Layout/AdminLayout";
 import { BannerForm } from "@/schemas/banner";
 import { OptionItem, getOptions } from "@/services/optionService";
 import { createAlbum } from "@/services/albumService";
+import { toast } from "@/lib/toast";
 
 function CreateAlbum() {
   const router = useRouter();
@@ -75,7 +76,7 @@ function CreateAlbum() {
    * ====================== */
   const handleSave = async () => {
     if (!name || !transitionIn || !transitionOut || banners.length === 0) {
-      alert("Please fill in all required fields.");
+      toast.error("Please fill in all required fields.")
       return;
     }
 
