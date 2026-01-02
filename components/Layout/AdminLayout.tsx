@@ -1,6 +1,6 @@
 import React from 'react';
 import Sidebar from './_Sidebar';
-import Topbar from './_Topbar';
+import Topbar from './Topbar';
 import ToastHost from "@/components/UI/ToastHost";
 
 interface AdminLayoutProps {
