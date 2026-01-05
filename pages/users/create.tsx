@@ -1,84 +1,118 @@
-// pages/dashboard/createUser.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdminLayout from "@/components/Layout/AdminLayout";
+import { createUser } from "@/services/userService";
+import { fetchRoles, Role } from "@/services/roleService";
+import { toast } from "@/lib/toast";
+import { useRouter } from "next/router";
 
 function CreateUser() {
+  const router = useRouter();
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [roles, setRoles] = useState<Role[]>([]);
   const [role, setRole] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchRoles()
+      .then(setRoles)
+      .catch(() => toast.error("Failed to load roles"));
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!firstName || !lastName || !email || !role) {
+      toast.error("All fields are required");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await createUser({
+        fname: firstName,
+        lname: lastName,
+        email,
+        role,
+      });
+
+      toast.success("User created successfully");
+      router.push("/users");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to create user");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="container">
       <h3 className="mb-4">Create a User</h3>
 
       <div className="form-group mb-3">
-        <label htmlFor="firstName" className="col-form-label">
-          First Name <span className="text-danger">*</span>
-        </label>
+        <label>First Name *</label>
         <input
-          type="text"
           className="form-control"
-          id="firstName"
-          placeholder="Enter first name"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
         />
       </div>
 
       <div className="form-group mb-3">
-        <label htmlFor="lastName" className="col-form-label">
-          Last Name <span className="text-danger">*</span>
-        </label>
+        <label>Last Name *</label>
         <input
-          type="text"
           className="form-control"
-          id="lastName"
-          placeholder="Enter last name"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
         />
       </div>
 
       <div className="form-group mb-3">
-        <label htmlFor="email" className="col-form-label">
-          Email <span className="text-danger">*</span>
-        </label>
+        <label>Email *</label>
         <input
           type="email"
           className="form-control"
-          id="email"
-          placeholder="Enter email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
       </div>
 
       <div className="form-group mb-3">
-        <label htmlFor="role" className="col-form-label">
-          Role <span className="text-danger">*</span>
-        </label>
+        <label>Role *</label>
         <select
-          id="role"
           className="form-control"
           value={role}
           onChange={(e) => setRole(e.target.value)}
+          disabled={roles.length === 0}
         >
           <option value="">Select role</option>
-          <option value="admin">Admin</option>
-          <option value="editor">Editor</option>
-          <option value="viewer">Viewer</option>
+          {roles.map((r) => (
+            <option key={r.id} value={r.name}>
+              {r.name}
+            </option>
+          ))}
         </select>
       </div>
 
-        <div className="btn-group mt-3">
-          <button className="btn btn-primary">Create User</button>
-          <button className="btn btn-outline-secondary">Cancel</button>
-        </div>
+      <div className="btn-group mt-3">
+        <button
+          className="btn btn-primary"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? "Creating..." : "Create User"}
+        </button>
+        <button
+          className="btn btn-outline-secondary"
+          onClick={() => router.back()}
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   );
 }
 
 CreateUser.Layout = AdminLayout;
-
 export default CreateUser;

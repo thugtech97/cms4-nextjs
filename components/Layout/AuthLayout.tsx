@@ -1,4 +1,6 @@
 import React from "react";
+import ToastHost from "@/components/UI/ToastHost";
+
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -28,6 +30,7 @@ export default function AuthLayout({ children, title, imageUrl }: AuthLayoutProp
           {children}
         </div>
       </div>
+      <ToastHost />
     </div>
   );
 }

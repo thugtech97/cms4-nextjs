@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import AuthLayout from "@/components/Layout/AuthLayout";
+import { toast } from "@/lib/toast";
 
 function ResetPasswordPage() {
   const [email, setEmail] = useState("");
@@ -10,12 +11,12 @@ function ResetPasswordPage() {
     e.preventDefault();
 
     if (!email || !password || !confirmPassword) {
-      alert("All fields are required");
+      toast.error("All fields are required");
       return;
     }
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -37,7 +38,6 @@ function ResetPasswordPage() {
             className="form-control"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
           />
         </div>
 
@@ -49,7 +49,6 @@ function ResetPasswordPage() {
             className="form-control"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
           />
         </div>
 
@@ -61,7 +60,6 @@ function ResetPasswordPage() {
             className="form-control"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            required
           />
         </div>
 

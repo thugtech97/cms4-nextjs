@@ -1,14 +1,23 @@
 "use client";
 
 import AdminLayout from "@/components/Layout/AdminLayout";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import TinyEditor from "@/components/UI/Editor";
 import { toast } from "@/lib/toast";
-import { createArticle, fetchArticleCategories, ArticleCategory } from "@/services/articleService";
+import {
+  updateArticle,
+  getArticle,
+  fetchArticleCategories,
+  ArticleCategory,
+} from "@/services/articleService";
 import { useRouter } from "next/router";
 
-export default function CreateNews() {
+export default function EditNews() {
   const router = useRouter();
+  const { id } = router.query;
+
+  const [loading, setLoading] = useState(true);
+
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [category, setCategory] = useState("");
@@ -30,19 +39,68 @@ export default function CreateNews() {
   const [categories, setCategories] = useState<ArticleCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
+  /* ======================
+   * Load Article + Categories
+   * ====================== */
+  useEffect(() => {
+    if (!id) return;
+
+    Promise.all([
+      getArticle(Number(id)),
+      fetchArticleCategories(),
+    ])
+      .then(([article, cats]) => {
+        setTitle(article.name);
+        setDate(article.date); // ✅ correct day
+        setCategory(article.category_id.toString());
+        setContent(article.contents);
+        setTeaser(article.teaser);
+
+        setIsPublished(article.status === "published");
+        setIsFeatured(!!article.is_featured);
+
+        setSeoTitle(article.meta_title ?? "");
+        setSeoDescription(article.meta_description ?? "");
+        setSeoKeywords(article.meta_keyword ?? "");
+
+        if (article.image_url) {
+          setBannerPreview(
+            `${process.env.NEXT_PUBLIC_API_URL}/storage/${article.image_url}`
+          );
+        }
+
+        if (article.thumbnail_url) {
+          setThumbnailPreview(
+            `${process.env.NEXT_PUBLIC_API_URL}/storage/${article.thumbnail_url}`
+          );
+        }
+
+        setCategories(cats);
+      })
+      .catch(() => toast.error("Failed to load article"))
+      .finally(() => {
+        setLoading(false);
+        setLoadingCategories(false);
+      });
+  }, [id]);
+
+  useEffect(() => {
+    return () => {
+      if (bannerPreview?.startsWith("blob:"))
+        URL.revokeObjectURL(bannerPreview);
+      if (thumbnailPreview?.startsWith("blob:"))
+        URL.revokeObjectURL(thumbnailPreview);
+    };
+  }, [bannerPreview, thumbnailPreview]);
+
   const handleSubmit = async () => {
-    if (!title || !date || !content || !teaser || !banner ||!thumbnail ) {
+    if (!title || !date || !content || !teaser || !category) {
       toast.error("Please fill in all required fields");
       return;
     }
 
-    if (!category) {
-      toast.error("Please select a category");
-      return;
-    }
-
     try {
-      await createArticle({
+      await updateArticle(Number(id), {
         title,
         date,
         category_id: Number(category),
@@ -57,32 +115,25 @@ export default function CreateNews() {
         meta_description: seoDescription,
       });
 
-      toast.success("News saved successfully");
+      toast.success("News updated successfully");
       router.push("/news");
-    } catch (err: any) {
-      toast.error("Failed to save news");
+    } catch (err) {
+      toast.error("Failed to update news");
       console.error(err);
     }
   };
 
-  useEffect(() => {
-    return () => {
-      if (bannerPreview) URL.revokeObjectURL(bannerPreview);
-      if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview);
-    };
-  }, [bannerPreview, thumbnailPreview]);
-
-  useEffect(() => {
-    fetchArticleCategories()
-      .then(setCategories)
-      .catch(() => toast.error("Failed to load categories"))
-      .finally(() => setLoadingCategories(false));
-  }, []);
-
+  if (loading) {
+    return (
+      <div className="container">
+        <p>Loading article...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container">
-      <h3 className="mb-4">Create a News</h3>
+      <h3 className="mb-4">Edit News</h3>
 
       {/* ================= News Details ================= */}
       <div className="card mb-4">
@@ -126,7 +177,9 @@ export default function CreateNews() {
               disabled={loadingCategories}
             >
               <option value="">
-                {loadingCategories ? "Loading categories..." : "-- Select Category --"}
+                {loadingCategories
+                  ? "Loading categories..."
+                  : "-- Select Category --"}
               </option>
 
               {categories.map((cat) => (
@@ -137,11 +190,9 @@ export default function CreateNews() {
             </select>
           </div>
 
-          {/* Article Banner Upload */}
+          {/* Banner */}
           <div className="mb-3">
-            <label className="form-label">
-              Article Banner <span className="text-danger">*</span>
-            </label>
+            <label className="form-label">Article Banner</label>
             <input
               type="file"
               className="form-control"
@@ -149,32 +200,24 @@ export default function CreateNews() {
               onChange={(e) => {
                 const file = e.target.files?.[0] || null;
                 setBanner(file);
-
-                if (file) {
-                  setBannerPreview(URL.createObjectURL(file));
-                } else {
-                  setBannerPreview(null);
-                }
+                setBannerPreview(
+                  file ? URL.createObjectURL(file) : bannerPreview
+                );
               }}
             />
 
             {bannerPreview && (
-              <div className="mt-2">
-                <img
-                  src={bannerPreview}
-                  alt="Banner Preview"
-                  className="img-fluid rounded border"
-                  style={{ maxHeight: 200 }}
-                />
-              </div>
+              <img
+                src={bannerPreview}
+                className="img-fluid rounded border mt-2"
+                style={{ maxHeight: 200 }}
+              />
             )}
           </div>
 
-          {/* Article Thumbnail Upload */}
+          {/* Thumbnail */}
           <div className="mb-3">
-            <label className="form-label">
-              Article Thumbnail <span className="text-danger">*</span>
-            </label>
+            <label className="form-label">Article Thumbnail</label>
             <input
               type="file"
               className="form-control"
@@ -182,24 +225,18 @@ export default function CreateNews() {
               onChange={(e) => {
                 const file = e.target.files?.[0] || null;
                 setThumbnail(file);
-
-                if (file) {
-                  setThumbnailPreview(URL.createObjectURL(file));
-                } else {
-                  setThumbnailPreview(null);
-                }
+                setThumbnailPreview(
+                  file ? URL.createObjectURL(file) : thumbnailPreview
+                );
               }}
             />
 
             {thumbnailPreview && (
-              <div className="mt-2">
-                <img
-                  src={thumbnailPreview}
-                  alt="Thumbnail Preview"
-                  className="img-fluid rounded border"
-                  style={{ maxHeight: 150 }}
-                />
-              </div>
+              <img
+                src={thumbnailPreview}
+                className="img-fluid rounded border mt-2"
+                style={{ maxHeight: 150 }}
+              />
             )}
           </div>
 
@@ -231,11 +268,10 @@ export default function CreateNews() {
               <input
                 className="form-check-input"
                 type="checkbox"
-                id="visibilitySwitch"
                 checked={isPublished}
                 onChange={() => setIsPublished(!isPublished)}
               />
-              <label className="form-check-label" htmlFor="visibilitySwitch">
+              <label className="form-check-label">
                 {isPublished ? "Published" : "Private"}
               </label>
             </div>
@@ -243,20 +279,15 @@ export default function CreateNews() {
 
           {/* Featured */}
           <div className="mb-3">
-            <label className="form-label">
-              Display (Max Featured: 3)
-            </label>
+            <label className="form-label">Display (Max Featured: 3)</label>
             <div className="form-check form-switch">
               <input
                 className="form-check-input"
                 type="checkbox"
-                id="featuredSwitch"
                 checked={isFeatured}
                 onChange={() => setIsFeatured(!isFeatured)}
               />
-              <label className="form-check-label" htmlFor="featuredSwitch">
-                Featured
-              </label>
+              <label className="form-check-label">Featured</label>
             </div>
           </div>
         </div>
@@ -301,7 +332,7 @@ export default function CreateNews() {
       {/* Actions */}
       <div className="btn-group">
         <button className="btn btn-primary" onClick={handleSubmit}>
-          Save News
+          Update News
         </button>
         <button
           className="btn btn-outline-secondary"
@@ -314,4 +345,4 @@ export default function CreateNews() {
   );
 }
 
-CreateNews.Layout = AdminLayout;
+EditNews.Layout = AdminLayout;

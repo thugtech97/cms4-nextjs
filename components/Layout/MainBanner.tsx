@@ -31,28 +31,58 @@ export default function MainBanner({ album }: MainBannerProps) {
   return (
     <section
       style={{
-        backgroundImage: `url(${banner.image_url})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        minHeight: "500px",
-        display: "flex",
-        alignItems: "center",
         position: "relative",
+        minHeight: "500px",
+        overflow: "hidden",
       }}
     >
+      {/* 🖼 SLIDER STRIP */}
+      <div
+        style={{
+          display: "flex",
+          width: `${banners.length * 100}%`,
+          height: "100%",
+          transform: `translateX(-${current * (100 / banners.length)}%)`,
+          transition: "transform 0.8s ease-in-out",
+          position: "absolute",
+          inset: 0,
+        }}
+      >
+        {banners.map((banner, index) => (
+          <div
+            key={index}
+            style={{
+              width: `${100 / banners.length}%`,
+              backgroundImage: `url(${banner.image_url})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+            }}
+          />
+        ))}
+      </div>
+
       {/* overlay */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: "rgba(0, 0, 0, 0.10)",
+          background: "rgba(0,0,0,0.10)",
+          zIndex: 1,
         }}
       />
 
+      {/* 🧾 CONTENT (STATIC) */}
       <div
         className="container text-center text-white"
-        style={{ position: "relative", zIndex: 2 }}
+        style={{
+          position: "relative",
+          zIndex: 2,
+          minHeight: "500px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+        }}
       >
         {banner.title && <h1 className="fw-bold mb-3">{banner.title}</h1>}
         {banner.description && (
@@ -64,26 +94,36 @@ export default function MainBanner({ album }: MainBannerProps) {
             {banner.button_text}
           </a>
         )}
+      </div>
 
-        {/* dots */}
-        <div className="mt-4 d-flex justify-content-center gap-2">
-          {banners.map((_, index) => (
-            <span
-              key={index}
-              onClick={() => setCurrent(index)}
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                backgroundColor:
-                  index === current
-                    ? "#fff"
-                    : "rgba(255,255,255,0.5)",
-                cursor: "pointer",
-              }}
-            />
-          ))}
-        </div>
+      {/* ● dots */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "20px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          display: "flex",
+          gap: "8px",
+          zIndex: 3,
+        }}
+      >
+        {banners.map((_, index) => (
+          <span
+            key={index}
+            onClick={() => setCurrent(index)}
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              backgroundColor:
+                index === current
+                  ? "#fff"
+                  : "rgba(255,255,255,0.5)",
+              cursor: "pointer",
+            }}
+          />
+        ))}
       </div>
     </section>
   );

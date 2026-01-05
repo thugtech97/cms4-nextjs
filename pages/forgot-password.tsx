@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import AuthLayout from "@/components/Layout/AuthLayout";
+import { toast } from "@/lib/toast";
 
 function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -8,7 +9,7 @@ function ForgotPasswordPage() {
     e.preventDefault();
 
     if (!email) {
-      alert("Please enter your email address");
+      toast.error("Please enter your email address");
       return;
     }
 
@@ -31,7 +32,6 @@ function ForgotPasswordPage() {
             className="form-control"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
           />
         </div>
 

@@ -4,7 +4,7 @@ import AdminLayout from "@/components/Layout/AdminLayout";
 
 type TabKey = "personal" | "account";
 
-function SettingsPage() {
+function AccountSettingsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("personal");
   const [firstName, setFirstName] = useState("Adminz");
   const [lastName, setLastName] = useState("Istratorz");
@@ -177,6 +177,6 @@ function SettingsPage() {
   );
 }
 
-SettingsPage.Layout = AdminLayout;
+AccountSettingsPage.Layout = AdminLayout;
 
-export default SettingsPage;
+export default AccountSettingsPage;

@@ -13,11 +13,15 @@ export default function Banner({
   subtitle,
   album,
 }: BannerProps) {
-  // ✅ main banner
   if (album?.type === "main_banner") {
     return <MainBanner album={album} />;
   }
 
-  // ✅ ordinary page banner
-  return <PageBanner title={title} subtitle={subtitle} />;
+  return (
+    <PageBanner
+      title={title}
+      subtitle={subtitle}
+      album={album}
+    />
+  );
 }

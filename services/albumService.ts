@@ -1,11 +1,8 @@
 import { axiosInstance } from "./axios";
 
-/* =======================
- * Types
- * ======================= */
 
 export interface BannerPayload {
-  id?: number; // present on update
+  id?: number;
   title?: string;
   description?: string;
   alt?: string;
@@ -19,7 +16,7 @@ export interface AlbumPayload {
   name: string;
   transition_in: string;
   transition_out: string;
-  transition: number; // duration in seconds
+  transition: number;
   banner_type: "image";
   type?: string;
   banners: BannerPayload[];
@@ -50,10 +47,6 @@ export const updateAlbum = (id: number, payload: AlbumPayload) => {
   formData.append("_method", "PUT"); // Laravel PUT via POST
   return axiosInstance.post(`/albums/${id}`, formData);
 };
-
-/* =======================
- * Helpers
- * ======================= */
 
 const buildAlbumFormData = (payload: AlbumPayload) => {
   const formData = new FormData();

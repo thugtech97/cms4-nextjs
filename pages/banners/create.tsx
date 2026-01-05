@@ -98,7 +98,7 @@ function CreateAlbum() {
     };
 
     await createAlbum(payload);
-
+    toast.success("Album created successfully!");
     router.push("/banners");
   };
 
@@ -168,7 +168,7 @@ function CreateAlbum() {
         <input
           type="range"
           className="form-range"
-          min={2}
+          min={1}
           max={10}
           value={duration}
           onChange={(e) => setDuration(Number(e.target.value))}

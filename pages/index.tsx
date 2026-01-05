@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/router";
 import AuthLayout from "@/components/Layout/AuthLayout";
 import { login } from "@/services/authService";  // Import the login function
+import { toast } from "@/lib/toast";
 
 function LoginPage() {
   const router = useRouter();
@@ -17,8 +18,10 @@ function LoginPage() {
         console.log("Payload:", { email, password });
 
         await login(email, password);
+        toast.success("Login successfully.")
         router.push("/dashboard");
       } catch (error: any) {
+        toast.error(error.message || "Login failed, please try again")
         setErrorMessage(error.message || "Login failed, please try again");
       }
     }

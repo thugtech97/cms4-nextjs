@@ -10,6 +10,7 @@ export default function DashboardIndex() {
   const [stats, setStats] = useState({
     pages: 0,
     albums: 0,
+    news: 0,
   });
 
   useEffect(() => {
@@ -20,6 +21,7 @@ export default function DashboardIndex() {
         setStats({
           pages: res.data.data.pages_count,
           albums: res.data.data.albums_count,
+          news: res.data.data.news_count,
         });
       } catch (error) {
         console.error("Failed to load dashboard stats", error);
@@ -36,6 +38,7 @@ export default function DashboardIndex() {
       <StatsCards
         pagesCount={stats.pages}
         albumsCount={stats.albums}
+        newsCount={stats.news}
       />
 
       <section className="row mb-4">
