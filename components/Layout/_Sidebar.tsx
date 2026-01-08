@@ -67,9 +67,9 @@ export default function Sidebar() {
       label: "⚙️ Settings", 
       href: "/settings",
       children: [
-        { label: "• Account Settings", href: "/settings" },
-        { label: "• Website Settings", href: "" },
-        { label: "• Audit Trail", href: ""}
+        { label: "• Account Settings", href: "/settings/account" },
+        { label: "• Website Settings", href: "/settings/website" },
+        { label: "• Audit Trail", href: "/settings/audit"}
       ]
     },
     { 
