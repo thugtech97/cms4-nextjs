@@ -16,6 +16,7 @@ import {
   flattenTree,
   buildTree,
 } from "@/components/MenuBuilder/treeUtils";
+import CustomUrlPanel from "@/components/MenuBuilder/CustomUrlPanel";
 
 function EditMenu() {
   const router = useRouter();
@@ -37,11 +38,13 @@ function EditMenu() {
           res.map((p) => ({
             id: p.id,
             title: p.name,
+            slug: p.slug,
           }))
         )
       )
       .finally(() => setLoadingPages(false));
   }, []);
+
 
   /* ================= FETCH MENU ================= */
   useEffect(() => {
@@ -64,6 +67,8 @@ function EditMenu() {
     );
   };
 
+  const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL;
+
   const addPages = () => {
     const newItems: MenuItem[] = pages
       .filter(
@@ -74,6 +79,8 @@ function EditMenu() {
       .map((p) => ({
         id: p.id,
         label: p.title,
+        type: "page",
+        target: `${FRONTEND_URL}/public/${p.slug}`,
         children: [],
       }));
 
@@ -101,7 +108,7 @@ function EditMenu() {
       });
 
       toast.success("Menu updated!");
-      router.push("/menu");
+      //router.push("/menu");
     } catch (error) {
       toast.error("Failed to update menu");
       console.error(error);
@@ -133,6 +140,11 @@ function EditMenu() {
             checked={checked}
             onToggle={togglePage}
             onAdd={addPages}
+          />
+          <CustomUrlPanel
+            onAdd={(item) =>
+              setTree((prev) => [...prev, item])
+            }
           />
         </div>
 

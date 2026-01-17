@@ -67,7 +67,15 @@ export default function StructurePanel({
             strategy={verticalListSortingStrategy}
           >
             {flatItems.map((item) => (
-              <SortableItem key={item.id} item={item} />
+              <SortableItem
+                key={item.id}
+                item={item}
+                onUpdate={onChange}
+                onRemove={(id) =>
+                  onChange(flatItems.filter((i) => i.id !== id))
+                }
+                flatItems={flatItems}
+              />
             ))}
           </SortableContext>
         </DndContext>

@@ -39,13 +39,13 @@ export const getPublicPageBySlug = (slug: string) => {
   return axiosInstance.get<PublicPage>(`/public/pages/${slug}`);
 };
 
-export interface PublicMenuItem {
+export type PublicMenuItem = {
   id: number;
-  title: string;
-  slug: string;
-  parent_id?: number | null;
+  label: string;
+  type: "page" | "url";
+  target: string;
   children?: PublicMenuItem[];
-}
+};
 
 export interface PublicMenu {
   id: number;

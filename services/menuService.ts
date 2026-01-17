@@ -1,10 +1,11 @@
 import { axiosInstance } from "./axios";
 
-export interface PageDTO {
+export type PageDTO = {
   id: number;
   name: string;
   label: string;
-}
+  slug: string;
+};
 
 export interface MenuPayload {
   name: string;

@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { getAllPages, createMenu } from "@/services/menuService";
 import PagesPanel from "@/components/MenuBuilder/PagesPanel";
 import StructurePanel from "@/components/MenuBuilder/StructurePanel";
+import CustomUrlPanel from "@/components/MenuBuilder/CustomUrlPanel";
 import { Page, MenuItem, FlatItem } from "@/components/MenuBuilder/types";
 import { toast } from "@/lib/toast";
 import {
@@ -22,7 +23,6 @@ function CreateMenu() {
   const [tree, setTree] = useState<MenuItem[]>([]);
   const router = useRouter();
 
-  /* ================= FETCH PAGES ================= */
   useEffect(() => {
     getAllPages()
       .then((res) =>
@@ -30,20 +30,23 @@ function CreateMenu() {
           res.map((p) => ({
             id: p.id,
             title: p.name,
+            slug: p.slug,
           }))
         )
       )
       .finally(() => setLoadingPages(false));
   }, []);
 
+
   const flatItems = flattenTree(tree);
 
-  /* ================= PAGE SELECTION ================= */
   const togglePage = (id: number) => {
     setChecked((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
+
+  const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL;
 
   const addPages = () => {
     const newItems: MenuItem[] = pages
@@ -55,6 +58,8 @@ function CreateMenu() {
       .map((p) => ({
         id: p.id,
         label: p.title,
+        type: "page",
+        target: `${FRONTEND_URL}/public/${p.slug}`,
         children: [],
       }));
 
@@ -62,12 +67,11 @@ function CreateMenu() {
     setChecked([]);
   };
 
-  /* ================= STRUCTURE ================= */
+
   const handleStructureChange = (flat: FlatItem[]) => {
     setTree(buildTree(flat));
   };
 
-  /* ================= SAVE MENU ================= */
   const saveMenu = async () => {
     if (!menuName.trim()) {
       toast.error("Menu name is required");
@@ -82,7 +86,7 @@ function CreateMenu() {
       });
 
       toast.success("Menu saved!");
-      router.push("/menu"); // ✅ redirect
+      router.push("/menu");
     } catch (error) {
       toast.error("Failed to save menu");
       console.error(error);
@@ -114,6 +118,12 @@ function CreateMenu() {
             checked={checked}
             onToggle={togglePage}
             onAdd={addPages}
+          />
+
+          <CustomUrlPanel
+            onAdd={(item) =>
+              setTree((prev) => [...prev, item])
+            }
           />
         </div>
 

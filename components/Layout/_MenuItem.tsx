@@ -1,27 +1,41 @@
 import Link from "next/link";
+import { PublicMenuItem } from "@/services/publicPageService";
 
 export default function MenuItem({
   item,
   currentPath,
 }: {
-  item: any;
+  item: PublicMenuItem;
   currentPath: string;
 }) {
-  const href = `/public/${item.slug}`;
+  const href = item.target;
+  const isInternal = item.type === "page";
 
   const isCurrent =
-    currentPath === href ||
-    currentPath.startsWith(href + "/");
+    isInternal &&
+    (currentPath === href ||
+      currentPath.startsWith(href + "/"));
 
   return (
     <li className={`menu-item ${isCurrent ? "current" : ""}`}>
-      <Link href={href} className="menu-link">
-        <div>{item.title}</div>
-      </Link>
+      {isInternal ? (
+        <Link href={href} className="menu-link">
+          <span>{item.label}</span>
+        </Link>
+      ) : (
+        <a
+          href={href}
+          className="menu-link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span>{item.label}</span>
+        </a>
+      )}
 
-      {item.children?.length > 0 && (
+      {item.children && item.children.length > 0 && (
         <ul className="sub-menu-container">
-          {item.children.map((child: any) => (
+          {item.children.map((child) => (
             <MenuItem
               key={child.id}
               item={child}
