@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import DataTable, { Column } from "@/components/UI/DataTable";
 import SearchBar from "@/components/UI/SearchBar";
-import { getAlbums, AlbumRow } from "@/services/albumService";
+import { getAlbums, AlbumRow, updateAlbumMeta, deleteAlbum, getAlbum } from "@/services/albumService";
+import { OptionItem, getOptions } from "@/services/optionService";
+import { toast } from "@/lib/toast";
+import ConfirmModal from "@/components/UI/ConfirmModal";
 import { useRouter } from "next/router";
 import PageSizeSelector from "@/components/UI/PageSizeSelector";
 
@@ -17,6 +20,23 @@ function ManageAlbums() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [perPage, setPerPage] = useState(10);
+  const [sortBy, setSortBy] = useState<string>("updated_at");
+  const [sortOrder, setSortOrder] = useState<string>("desc");
+  const [showDeleted, setShowDeleted] = useState<boolean>(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [selected, setSelected] = useState<AlbumRow | null>(null);
+  const [name, setName] = useState("");
+  const [transitionIn, setTransitionIn] = useState("");
+  const [transitionOut, setTransitionOut] = useState("");
+  const [duration, setDuration] = useState<number>(2);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [entranceOptions, setEntranceOptions] = useState<OptionItem[]>([]);
+  const [exitOptions, setExitOptions] = useState<OptionItem[]>([]);
 
   /* ======================
    * Fetch Albums
@@ -29,6 +49,9 @@ function ManageAlbums() {
         search,
         page: currentPage,
         per_page: perPage,
+        sort_by: sortBy,
+        sort_order: sortOrder,
+        show_deleted: showDeleted,
       });
 
       setAlbums(res.data.data);
@@ -46,7 +69,7 @@ function ManageAlbums() {
   useEffect(() => {
     const timeout = setTimeout(fetchAlbums, 400);
     return () => clearTimeout(timeout);
-  }, [search, currentPage, perPage]);
+  }, [search, currentPage, perPage, sortBy, sortOrder, showDeleted]);
 
   /* ======================
    * Columns
@@ -54,8 +77,26 @@ function ManageAlbums() {
   const columns: Column<AlbumRow>[] = [
     {
       key: "select",
-      header: <input type="checkbox" />,
-      render: () => <input type="checkbox" />,
+      header: (
+        <input
+          type="checkbox"
+          checked={selectedIds.length > 0 && selectedIds.length === albums.length}
+          onChange={(e) => {
+            if (e.target.checked) setSelectedIds(albums.map((a) => a.id));
+            else setSelectedIds([]);
+          }}
+        />
+      ),
+      render: (row) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.includes(row.id)}
+          onChange={(e) => {
+            if (e.target.checked) setSelectedIds((prev) => Array.from(new Set([...prev, row.id])));
+            else setSelectedIds((prev) => prev.filter((id) => id !== row.id));
+          }}
+        />
+      ),
     },
     {
       key: "name",
@@ -84,14 +125,118 @@ function ManageAlbums() {
           >
             <i className="fas fa-edit" />
           </button>
-
-          <button className="btn btn-link p-0 text-secondary" title="Settings">
+          <button
+            className="btn btn-link p-0 text-secondary"
+            title="Settings"
+            onClick={(e) => {
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              setMenuPos({ top: rect.bottom + window.scrollY, left: rect.left });
+              setSelected(row);
+              setName(row.name);
+              setShowSettingsMenu(true);
+            }}
+          >
             <i className="fas fa-cogs" />
           </button>
+
+
         </>
       ),
     },
   ];
+
+  const closeSettings = () => {
+    setShowSettings(false);
+    setSelected(null);
+  };
+
+  const saveSettings = async () => {
+    if (!selected) return;
+    try {
+      // fetch existing album to preserve banners if server would replace missing fields
+      const albumRes: any = await getAlbum(selected.id);
+      const existingBanners = Array.isArray(albumRes?.data?.banners)
+        ? albumRes.data.banners.map((b: any, i: number) => ({ id: b.id, order: i }))
+        : [];
+
+      await updateAlbumMeta(selected.id, { name, transition_in: transitionIn, transition_out: transitionOut, transition: duration, banners: existingBanners });
+      toast.success("Album updated");
+      closeSettings();
+      fetchAlbums();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to update album");
+    }
+  };
+
+  // Open quick-edit from the small settings menu: load options and album, then open modal
+  const openQuickEditFromMenu = async () => {
+    if (!selected) return;
+    try {
+      const [entranceRes, exitRes] = await Promise.all([
+        getOptions({ type: "animation", field_type: "entrance" }),
+        getOptions({ type: "animation", field_type: "exit" }),
+      ]);
+      const entranceData = entranceRes?.data?.data || [];
+      const exitData = exitRes?.data?.data || [];
+      setEntranceOptions(entranceData);
+      setExitOptions(exitData);
+
+      // prefer album's saved transitions when available
+      try {
+        const albumRes: any = await getAlbum(selected.id);
+        const album = albumRes?.data;
+        if (album) {
+          setTransitionIn(album.transition_in ? String(album.transition_in) : (entranceData[0] ? String(entranceData[0].id) : ""));
+          setTransitionOut(album.transition_out ? String(album.transition_out) : (exitData[0] ? String(exitData[0].id) : ""));
+          setDuration(album.transition ? Number(album.transition) : 2);
+        } else {
+          setTransitionIn(entranceData[0] ? String(entranceData[0].id) : "");
+          setTransitionOut(exitData[0] ? String(exitData[0].id) : "");
+          setDuration(2);
+        }
+      } catch (err) {
+        setTransitionIn(entranceData[0] ? String(entranceData[0].id) : "");
+        setTransitionOut(exitData[0] ? String(exitData[0].id) : "");
+        setDuration(2);
+      }
+
+      setShowSettingsMenu(false);
+      setShowSettings(true);
+    } catch (err) {
+      toast.error("Failed to load options");
+      setShowSettingsMenu(false);
+    }
+  };
+
+  // Bulk delete selected albums
+  const confirmBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    try {
+      await Promise.all(selectedIds.map((id) => deleteAlbum(id)));
+      toast.success(`Deleted ${selectedIds.length} album(s)`);
+      setSelectedIds([]);
+      setShowBulkDeleteConfirm(false);
+      fetchAlbums();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to delete selected albums");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selected) return;
+    try {
+      await deleteAlbum(selected.id);
+      toast.success("Album deleted");
+      setShowDeleteConfirm(false);
+      closeSettings();
+      fetchAlbums();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to delete album");
+    }
+  };
+
+  const openDeleteConfirm = () => setShowDeleteConfirm(true);
+  const cancelDelete = () => setShowDeleteConfirm(false);
 
   /* ======================
    * UI
@@ -105,6 +250,27 @@ function ManageAlbums() {
         value={search}
         onChange={(value) => {
           setSearch(value);
+          setCurrentPage(1);
+        }}
+        actionsMenu={(
+          <>
+            <button
+              className="list-group-item list-group-item-action text-danger"
+              onClick={() => { setShowBulkDeleteConfirm(true); }}
+            >
+              Delete
+            </button>
+          </>
+        )}
+        initialSortBy={sortBy === 'updated_at' ? 'modified' : (sortBy === 'name' ? 'title' : sortBy)}
+        initialSortOrder={sortOrder}
+        initialShowDeleted={showDeleted}
+        initialPerPage={perPage}
+        onApplyFilters={({ sortBy: sBy, sortOrder: sOrder, showDeleted: sDeleted, perPage: sPerPage }) => {
+          setSortBy(sBy === 'modified' ? 'updated_at' : sBy === 'title' ? 'name' : sBy);
+          setSortOrder(sOrder);
+          setShowDeleted(sDeleted);
+          setPerPage(sPerPage);
           setCurrentPage(1);
         }}
       />
@@ -125,6 +291,94 @@ function ManageAlbums() {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
+      />
+
+      {/* Quick Settings Modal */}
+      {showSettings && selected && (
+        <div className="position-fixed top-0 start-0 w-100 h-100" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+          <div className="d-flex align-items-center justify-content-center h-100">
+            <div className="card" style={{ width: 480 }}>
+              <div className="card-body">
+                <h5 className="card-title">Quick Edit Album</h5>
+
+                <div className="mb-2">
+                  <label className="form-label">Album Name</label>
+                  <input className="form-control" value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+
+                <div className="mb-2">
+                  <label className="form-label">Transition In</label>
+                  <select className="form-control" value={transitionIn} onChange={(e) => setTransitionIn(e.target.value)}>
+                    <option value="">Select</option>
+                    {entranceOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
+                  </select>
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Transition Out</label>
+                  <select className="form-control" value={transitionOut} onChange={(e) => setTransitionOut(e.target.value)}>
+                    <option value="">Select</option>
+                    {exitOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
+                  </select>
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Transition Duration (seconds)</label>
+                  <input
+                    type="range"
+                    className="form-range"
+                    min={1}
+                    max={10}
+                    value={duration}
+                    onChange={(e) => setDuration(Number(e.target.value))}
+                  />
+                  <small className="text-muted">{duration}s</small>
+                </div>
+
+                <div className="d-flex gap-2">
+                  <button className="btn btn-primary" onClick={saveSettings}>Save</button>
+                  <button className="btn btn-danger" onClick={openDeleteConfirm}>Delete</button>
+                  <button className="btn btn-secondary" onClick={closeSettings}>Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ConfirmModal
+        show={showDeleteConfirm && !!selected}
+        title="Confirm Delete"
+        message={(
+          <p>Are you sure you want to delete the album <strong>{selected?.name}</strong>? This action cannot be undone.</p>
+        )}
+        onConfirm={handleDelete}
+        onCancel={cancelDelete}
+      />
+
+      {/* Small anchored dropdown menu (near cog icon) */}
+      {showSettingsMenu && selected && menuPos && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 1055 }} onClick={() => setShowSettingsMenu(false)} />
+          <div style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 1060 }}>
+            <div className="card shadow-sm" style={{ width: 160 }}>
+              <div className="list-group list-group-flush">
+                <button className="list-group-item list-group-item-action" onClick={openQuickEditFromMenu}>Quick Edit</button>
+                <button className="list-group-item list-group-item-action text-danger" onClick={() => { setShowSettingsMenu(false); setShowDeleteConfirm(true); }}>Delete</button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      <ConfirmModal
+        show={showBulkDeleteConfirm}
+        title="Confirm Album(s) Delete"
+        message={(
+          <p>Are you sure you want to delete the selected <strong>{selectedIds.length}</strong> album(s)? This action cannot be undone.</p>
+        )}
+        onConfirm={confirmBulkDelete}
+        onCancel={() => setShowBulkDeleteConfirm(false)}
       />
     </div>
   );

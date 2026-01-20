@@ -9,5 +9,5 @@ export interface OptionItem {
 }
 
 export const getOptions = (params?: {type?: string;field_type?: string;}) => {
-  return axiosInstance.get<OptionItem[]>("/options", { params });
+  return axiosInstance.get<{ data: OptionItem[] }>("/options", { params });
 };
