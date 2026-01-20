@@ -3,19 +3,38 @@ import Link from "next/link";
 export default function NewsItem({ article }: any) {
   return (
     <div className="d-flex gap-4 mb-5 pb-4 border-bottom">
+      
       {/* IMAGE */}
-      <div style={{ width: 240 }}>
+      <div
+        style={{
+          width: 240,
+          height: 160,
+          flexShrink: 0,
+          overflow: "hidden",
+          borderRadius: "0.5rem",
+        }}
+      >
         <img
-          src={article.thumbnail_url? `${process.env.NEXT_PUBLIC_API_URL}/storage/${article.thumbnail_url}` : article.image_url}
-
-          className="img-fluid rounded"
+          src={
+            article.thumbnail_url
+              ? `${process.env.NEXT_PUBLIC_API_URL}/storage/${article.thumbnail_url}`
+              : article.image_url
+          }
           alt={article.name}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
         />
       </div>
 
       {/* CONTENT */}
       <div className="flex-grow-1">
-        <Link href={`/public/news/${article.slug}`} className="text-decoration-none">
+        <Link
+          href={`/public/news/${article.slug}`}
+          className="text-decoration-none"
+        >
           <h5 className="text-primary fw-bold">{article.name}</h5>
         </Link>
 
@@ -23,12 +42,13 @@ export default function NewsItem({ article }: any) {
           Posted on {article.date} &nbsp;|&nbsp; {article.category?.name}
         </div>
 
-        <p className="text-muted">
-          {article.teaser}
-        </p> 
+        <p className="text-muted">{article.teaser}</p>
 
-        <a href={`/public/news/${article.slug}`} className="btn btn-primary btn-sm">
-        Read More →
+        <a
+          href={`/public/news/${article.slug}`}
+          className="btn btn-primary btn-sm"
+        >
+          Read More →
         </a>
       </div>
     </div>
