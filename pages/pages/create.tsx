@@ -128,10 +128,12 @@ export default function CreatePage() {
 
           <div className="mb-3">
             <label className="form-label">Page Content</label>
+            {/**
             <AiAssistant
               content={content}
               onApply={(html) => setContent(html)}
             />
+             */}
             <TinyEditor
               value={content}
               onChange={setContent}
