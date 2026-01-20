@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { getAlbums } from "@/services/albumService";
 import { toast } from "@/lib/toast";
 import AiAssistant from "@/components/AI/AiAssistant";
+import SelectPreset from "@/components/UI/SelectPreset";
 
 function EditPage() {
   const router = useRouter();
@@ -136,6 +137,17 @@ function EditPage() {
               </select>
             </div>
           )}
+
+          <div className="mb-3">
+            <label className="form-label">Layout Presets</label>
+
+            <SelectPreset
+              onSelect={(html) => {
+                setContent(html);
+                toast.success("Layout preset applied");
+              }}
+            />
+          </div>
 
           <div className="mb-3">
             <label className="form-label">Page Content</label>

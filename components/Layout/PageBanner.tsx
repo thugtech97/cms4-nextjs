@@ -20,7 +20,6 @@ export default function PageBanner({
       ? album.transition * 1000
       : 5000;
 
-  // ✅ image fade slider
   useEffect(() => {
     if (!banners.length) return;
 
@@ -31,17 +30,17 @@ export default function PageBanner({
     return () => clearInterval(timer);
   }, [banners.length, interval]);
 
-  // ✅ With images
+  // 🖼 Banner with images
   if (banners.length > 0) {
     return (
       <section
         style={{
           position: "relative",
-          minHeight: "350px",
+          minHeight: 420,
           overflow: "hidden",
         }}
       >
-        {/* 🖼 IMAGE LAYER (FADE ONLY) */}
+        {/* Background Images */}
         {banners.map((banner, index) => (
           <div
             key={index}
@@ -51,38 +50,59 @@ export default function PageBanner({
               backgroundImage: `url(${banner.image_url})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
               opacity: index === current ? 1 : 0,
-              transition: "opacity 0.6s ease-in-out",
+              transition: "opacity 0.9s ease-in-out",
+              transform: index === current ? "scale(1)" : "scale(1.02)",
               zIndex: 0,
             }}
           />
         ))}
 
-        {/* overlay */}
+        {/* Gradient Overlay */}
         <div
           style={{
             position: "absolute",
             inset: 0,
-            background: "rgba(0,0,0,0.40)",
+            background:
+              "linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35), rgba(0,0,0,0.55))",
             zIndex: 1,
           }}
         />
 
-        {/* 🧾 CONTENT (STATIC – NO FADE) */}
+        {/* Content */}
         <div
           className="container text-center text-white"
           style={{
             position: "relative",
             zIndex: 2,
-            minHeight: "400px",
+            minHeight: 420,
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
+            paddingTop: 40,
+            paddingBottom: 40,
           }}
         >
-          <h1 className="fw-bold mb-3">{title}</h1>
-          <p className="lead mb-0">{subtitle}</p>
+          <h1
+            className="fw-bold mb-3"
+            style={{
+              textShadow: "0 4px 20px rgba(0,0,0,0.6)",
+            }}
+          >
+            {title}
+          </h1>
+
+          <p
+            className="lead mb-0"
+            style={{
+              maxWidth: 720,
+              margin: "0 auto",
+              opacity: 0.95,
+              textShadow: "0 2px 10px rgba(0,0,0,0.5)",
+            }}
+          >
+            {subtitle}
+          </p>
         </div>
       </section>
     );
@@ -90,10 +110,22 @@ export default function PageBanner({
 
   // 🔁 Fallback (no images)
   return (
-    <section className="bg-primary text-white py-5">
+    <section
+      className="text-white"
+      style={{
+        background:
+          "linear-gradient(135deg, #0d6efd 0%, #084298 100%)",
+        padding: "5rem 0",
+      }}
+    >
       <div className="container text-center">
         <h1 className="fw-bold mb-3">{title}</h1>
-        <p className="lead mb-5">{subtitle}</p>
+        <p
+          className="lead mb-0"
+          style={{ maxWidth: 680, margin: "0 auto", opacity: 0.9 }}
+        >
+          {subtitle}
+        </p>
       </div>
     </section>
   );

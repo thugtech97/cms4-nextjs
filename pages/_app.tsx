@@ -1,8 +1,14 @@
-// pages/_app.tsx
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+
 import "@/styles/globals.css";
+import "@/styles/navigation.css";
+import "@/styles/topbar.css";
+import "@/styles/banner.css";
+import "@/styles/animations.css";
+
 import "@/public/css/custom.css";
+
 import type { AppProps } from "next/app";
 import React from "react";
 import Script from "next/script";
@@ -28,10 +34,12 @@ export default function MyApp({ Component, pageProps }: AppPropsWithLayout) {
         />
 
          {/* ✅ YOUR CAROUSEL JS */}
+         {/**
         <Script
           src="/js/custom.js"
           strategy="afterInteractive"
         />
+         */}
       </Layout>
     </LoadingProvider>
   );

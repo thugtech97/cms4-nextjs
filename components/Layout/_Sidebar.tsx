@@ -32,7 +32,8 @@ export default function Sidebar() {
       href: "/pages",
       children: [
         { label: "• Manage Pages", href: "/pages" },
-        { label: "• Create a Page", href: "/pages/create" }
+        { label: "• Create a Page", href: "/pages/create" },
+        { label: "• Layout Presets", href: "/pages/presets" }
       ]
     },
     { 

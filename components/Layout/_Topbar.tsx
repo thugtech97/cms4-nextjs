@@ -4,25 +4,28 @@ import Menu from "./_Menu";
 
 export default function LandingTopbar() {
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <nav className="navbar navbar-expand-lg landing-topbar">
       <div className="container">
-        <Link href="/public/home" className="navbar-brand fw-bold">
-          Cms5
+        <Link href="/public/home" className="navbar-brand landing-brand">
+          Cms<span>5</span>
         </Link>
 
         <button
-          className="navbar-toggler"
+          className="navbar-toggler landing-toggler"
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#landingNavbar"
+          aria-controls="landingNavbar"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
         >
-          <span className="navbar-toggler-icon" />
+          <span />
+          <span />
+          <span />
         </button>
 
         <div className="collapse navbar-collapse" id="landingNavbar">
-          <ul className="navbar-nav ms-auto mb-2 mb-lg-0 gap-lg-3">
-            <Menu />
-          </ul>
+          <Menu />
         </div>
       </div>
     </nav>

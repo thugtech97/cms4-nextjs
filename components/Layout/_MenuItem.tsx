@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Link from "next/link";
 import { PublicMenuItem } from "@/services/publicPageService";
 
@@ -8,8 +9,11 @@ export default function MenuItem({
   item: PublicMenuItem;
   currentPath: string;
 }) {
+  const [open, setOpen] = useState(false);
+
   const href = item.target;
   const isInternal = item.type === "page";
+  const hasChildren = item.children && item.children.length > 0;
 
   const normalizePath = (url: string) => {
     try {
@@ -20,12 +24,26 @@ export default function MenuItem({
   };
 
   const hrefPath = normalizePath(href);
-  const isCurrent = isInternal && (currentPath === hrefPath || currentPath.startsWith(hrefPath + "/"));
+  const isCurrent =
+    isInternal &&
+    (currentPath === hrefPath ||
+      currentPath.startsWith(hrefPath + "/"));
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (hasChildren) {
+      //e.preventDefault(); // stop navigation
+      setOpen((prev) => !prev);
+    }
+  };
 
   return (
-    <li className={`menu-item ${isCurrent ? "current" : ""}`}>
+    <li
+      className={`menu-item ${isCurrent ? "current" : ""} ${
+        open ? "open" : ""
+      }`}
+    >
       {isInternal ? (
-        <Link href={href} className="menu-link">
+        <Link href={href} className="menu-link" onClick={handleClick}>
           <span>{item.label}</span>
         </Link>
       ) : (
@@ -34,14 +52,15 @@ export default function MenuItem({
           className="menu-link"
           target="_blank"
           rel="noopener noreferrer"
+          onClick={handleClick}
         >
           <span>{item.label}</span>
         </a>
       )}
 
-      {item.children && item.children.length > 0 && (
+      {hasChildren && (
         <ul className="sub-menu-container">
-          {item.children.map((child) => (
+          {item.children!.map((child) => (
             <MenuItem
               key={child.id}
               item={child}
