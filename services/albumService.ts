@@ -29,7 +29,7 @@ export interface AlbumRow {
   updated_at: string;
 }
 
-export const getAlbums = (params?: {search?: string;page?: number;per_page?: number;}) => {
+export const getAlbums = (params?: {search?: string;page?: number;per_page?: number; sort_by?: string; sort_order?: string; show_deleted?: boolean}) => {
   return axiosInstance.get("/albums", { params });
 };
 
@@ -46,6 +46,15 @@ export const updateAlbum = (id: number, payload: AlbumPayload) => {
   const formData = buildAlbumFormData(payload);
   formData.append("_method", "PUT"); // Laravel PUT via POST
   return axiosInstance.post(`/albums/${id}`, formData);
+};
+
+export const updateAlbumMeta = (id: number, payload: Partial<AlbumPayload>) => {
+  // Send PATCH for partial updates so server doesn't replace entire resource
+  return axiosInstance.patch(`/albums/${id}`, payload);
+};
+
+export const deleteAlbum = (id: number) => {
+  return axiosInstance.delete(`/albums/${id}`);
 };
 
 const buildAlbumFormData = (payload: AlbumPayload) => {
