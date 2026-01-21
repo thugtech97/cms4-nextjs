@@ -53,6 +53,19 @@ export default function SearchBar({
     if (initialPerPage !== undefined) setPerPage(initialPerPage);
   }, [initialPerPage]);
 
+  // when `showDeleted` is toggled we want to auto-apply filters
+  // but avoid doing this on the initial mount
+  const mountedRef = useRef(false);
+  React.useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
+    onApplyFilters?.({ sortBy, sortOrder, showDeleted, perPage });
+    // only trigger when `showDeleted` changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showDeleted]);
+
   const handleActionsClick = (e: React.MouseEvent) => {
     if (!actionsMenu) return;
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -72,72 +85,92 @@ export default function SearchBar({
   };
 
   const resetFilters = () => {
-    setSortBy("modified");
-    setSortOrder("desc");
-    setShowDeleted(false);
-    setPerPage(10);
+    const next = { sortBy: "modified", sortOrder: "desc", showDeleted: false, perPage: 10 };
+    setSortBy(next.sortBy);
+    setSortOrder(next.sortOrder);
+    setShowDeleted(next.showDeleted);
+    setPerPage(next.perPage);
+    onApplyFilters?.(next);
+    setShowFilters(false);
   };
 
   return (
     <div className="d-flex justify-content-between mb-3">
       <div style={{ position: "relative" }}>
-        <button className="btn btn-outline-secondary me-2" onClick={handleFiltersClick}>Filters</button>
-        <button ref={btnRef} className="btn btn-outline-secondary" onClick={handleActionsClick}>Actions</button>
+        <button
+          className={`btn btn-outline-secondary me-2 dropdown-toggle${showFilters ? " show" : ""}`}
+          onClick={handleFiltersClick}
+          aria-expanded={showFilters}
+          aria-haspopup="true"
+          type="button"
+        >
+          Filters
+        </button>
+        <button
+          ref={btnRef}
+          className={`btn btn-outline-secondary dropdown-toggle${showMenu ? " show" : ""}`}
+          onClick={handleActionsClick}
+          aria-expanded={showMenu}
+          aria-haspopup="true"
+          type="button"
+          disabled={!actionsMenu}
+        >
+          Actions
+        </button>
 
         {showFilters && filtersPos && (
           <div>
-            <div style={{ position: 'fixed', inset: 0, zIndex: 1055 }} onClick={() => setShowFilters(false)} />
-            <div style={{ position: 'fixed', top: filtersPos.top, left: filtersPos.left, zIndex: 1060 }}>
-              <div className="card shadow-sm" style={{ width: 300 }}>
-                <div className="p-3">
-                  <h6 className="mb-2">Filters</h6>
+            <div style={{ position: "fixed", inset: 0, zIndex: 1055 }} onClick={() => setShowFilters(false)} />
+            <div
+              className="dropdown-menu show p-3 shadow"
+              style={{ position: "fixed", top: filtersPos.top, left: filtersPos.left, zIndex: 1060, width: 320 }}
+            >
+              <h6 className="mb-2">Filters</h6>
 
-                  <div className="mb-2">
-                    <small className="text-muted">Sort by</small>
-                    <div>
-                      <div className="form-check">
-                        <input className="form-check-input" type="radio" name="sortBy" id="sortModified" checked={sortBy === 'modified'} onChange={() => setSortBy('modified')} />
-                        <label className="form-check-label" htmlFor="sortModified">Date modified</label>
-                      </div>
-                      <div className="form-check">
-                        <input className="form-check-input" type="radio" name="sortBy" id="sortTitle" checked={sortBy === 'title'} onChange={() => setSortBy('title')} />
-                        <label className="form-check-label" htmlFor="sortTitle">Title</label>
-                      </div>
-                    </div>
+              <div className="mb-2">
+                <small className="text-muted">Sort by</small>
+                <div>
+                  <div className="form-check">
+                    <input className="form-check-input" type="radio" name="sortBy" id="sortModified" checked={sortBy === "modified"} onChange={() => setSortBy("modified")} />
+                    <label className="form-check-label" htmlFor="sortModified">Date modified</label>
                   </div>
-
-                  <div className="mb-2">
-                    <small className="text-muted">Sort order</small>
-                    <div>
-                      <div className="form-check">
-                        <input className="form-check-input" type="radio" name="sortOrder" id="orderAsc" checked={sortOrder === 'asc'} onChange={() => setSortOrder('asc')} />
-                        <label className="form-check-label" htmlFor="orderAsc">Ascending</label>
-                      </div>
-                      <div className="form-check">
-                        <input className="form-check-input" type="radio" name="sortOrder" id="orderDesc" checked={sortOrder === 'desc'} onChange={() => setSortOrder('desc')} />
-                        <label className="form-check-label" htmlFor="orderDesc">Descending</label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="form-check mb-2">
-                    <input className="form-check-input" type="checkbox" id="showDeleted" checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} />
-                    <label className="form-check-label" htmlFor="showDeleted">Show deleted items</label>
-                  </div>
-
-                  <div className="mb-3">
-                    <small className="text-muted">Items displayed</small>
-                    <div className="d-flex align-items-center gap-2">
-                      <input type="range" className="form-range" min={5} max={100} step={1} value={perPage} onChange={(e) => setPerPage(Number(e.target.value))} style={{ flex: 1 }} />
-                      <span className="badge bg-primary">{perPage}</span>
-                    </div>
-                  </div>
-
-                  <div className="d-flex justify-content-between">
-                    <button className="btn btn-light" onClick={resetFilters}>Reset</button>
-                    <button className="btn btn-primary" onClick={applyFilters}>Apply filters</button>
+                  <div className="form-check">
+                    <input className="form-check-input" type="radio" name="sortBy" id="sortTitle" checked={sortBy === "title"} onChange={() => setSortBy("title")} />
+                    <label className="form-check-label" htmlFor="sortTitle">Title</label>
                   </div>
                 </div>
+              </div>
+
+              <div className="mb-2">
+                <small className="text-muted">Sort order</small>
+                <div>
+                  <div className="form-check">
+                    <input className="form-check-input" type="radio" name="sortOrder" id="orderAsc" checked={sortOrder === "asc"} onChange={() => setSortOrder("asc")} />
+                    <label className="form-check-label" htmlFor="orderAsc">Ascending</label>
+                  </div>
+                  <div className="form-check">
+                    <input className="form-check-input" type="radio" name="sortOrder" id="orderDesc" checked={sortOrder === "desc"} onChange={() => setSortOrder("desc")} />
+                    <label className="form-check-label" htmlFor="orderDesc">Descending</label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-check mb-2">
+                <input className="form-check-input" type="checkbox" id="showDeleted" checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} />
+                <label className="form-check-label" htmlFor="showDeleted">Show deleted only (Trash)</label>
+              </div>
+
+              <div className="mb-3">
+                <small className="text-muted">Items displayed</small>
+                <div className="d-flex align-items-center gap-2">
+                  <input type="range" className="form-range" min={5} max={100} step={1} value={perPage} onChange={(e) => setPerPage(Number(e.target.value))} style={{ flex: 1 }} />
+                  <span className="badge bg-primary">{perPage}</span>
+                </div>
+              </div>
+
+              <div className="d-flex justify-content-between">
+                <button type="button" className="btn btn-light" onClick={resetFilters}>Reset</button>
+                <button type="button" className="btn btn-primary" onClick={applyFilters}>Apply filters</button>
               </div>
             </div>
           </div>
@@ -145,12 +178,13 @@ export default function SearchBar({
 
         {showMenu && actionsMenu && menuPos && (
           <div>
-            <div style={{ position: 'fixed', inset: 0, zIndex: 1055 }} onClick={() => setShowMenu(false)} />
-            <div style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 1060 }}>
-              <div className="card shadow-sm" style={{ width: 160 }}>
-                <div className="list-group list-group-flush">
-                  {actionsMenu}
-                </div>
+            <div style={{ position: "fixed", inset: 0, zIndex: 1055 }} onClick={() => setShowMenu(false)} />
+            <div
+              className="dropdown-menu show p-0 shadow"
+              style={{ position: "fixed", top: menuPos.top, left: menuPos.left, zIndex: 1060, width: 180 }}
+            >
+              <div className="list-group list-group-flush">
+                {actionsMenu}
               </div>
             </div>
           </div>

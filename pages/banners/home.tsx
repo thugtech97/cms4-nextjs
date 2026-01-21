@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import AdminLayout from "@/components/Layout/AdminLayout";
-import { BannerForm } from "@/schemas/banner";
+import { BannerForm as BaseBannerForm } from "@/schemas/banner";
 import { OptionItem, getOptions } from "@/services/optionService";
 import { toast } from "@/lib/toast";
 import {
@@ -8,6 +8,11 @@ import {
   createAlbum,
   updateAlbum,
 } from "@/services/albumService";
+
+// Extend BannerForm to include order property
+interface BannerForm extends BaseBannerForm {
+  order?: number;
+}
 
 const HOME_ALBUM_ID = 1;
 
@@ -23,6 +28,8 @@ function HomeBanner() {
   const [resizedPreview, setResizedPreview] = useState<string | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const [localPreviews, setLocalPreviews] = useState<Record<number, string>>({});
+  const dragIndexRef = React.useRef<number | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
 
   const [isDraggingCrop, setIsDraggingCrop] = useState(false);
   const [cropRect, setCropRect] = useState<{x:number,y:number,w:number,h:number}>({x:0,y:0,w:0,h:0});
@@ -55,7 +62,7 @@ function HomeBanner() {
       setDuration(album.transition);
 
       setBanners(
-        album.banners.map((b: any) => {
+        album.banners.map((b: any, i: number) => {
           const serverPreview = `${process.env.NEXT_PUBLIC_API_URL}/storage/${b.image_path}`;
           return {
             id: b.id,
@@ -65,6 +72,7 @@ function HomeBanner() {
             button_text: b.button_text,
             url: b.url,
             alt: b.alt,
+            order: typeof b.order !== 'undefined' ? b.order : i,
           };
         })
       );
@@ -86,18 +94,62 @@ function HomeBanner() {
     const files = e.target.files;
     if (!files) return;
 
-    const newBanners: BannerForm[] = Array.from(files).map((file) => ({
-      image: file,
-      preview: URL.createObjectURL(file),
-    }));
-
-    setBanners((prev) => [...prev, ...newBanners]);
+    const fileArr = Array.from(files);
+    setBanners((prev) => {
+      const newBanners: BannerForm[] = fileArr.map((file, idx) => ({
+        image: file,
+        preview: URL.createObjectURL(file),
+        order: prev.length + idx,
+      }));
+      return [...prev, ...newBanners];
+    });
 
     e.target.value = "";
   };
 
   const handleRemoveBanner = (index: number) => {
     setBanners((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDragStart = (index: number, e: React.DragEvent) => {
+    dragIndexRef.current = index;
+    setDraggingIndex(index);
+    try {
+      e.dataTransfer?.setData("text/plain", String(index));
+    } catch {}
+    e.dataTransfer!.effectAllowed = "move";
+  };
+
+  const handleDragOver = (index: number, e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer!.dropEffect = "move";
+  };
+
+  const handleDrop = (index: number, e: React.DragEvent) => {
+    e.preventDefault();
+    const from = dragIndexRef.current;
+    if (from === null || from === undefined) return;
+    if (from === index) {
+      setDraggingIndex(null);
+      dragIndexRef.current = null;
+      return;
+    }
+
+    setBanners((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(index, 0, moved);
+      // update explicit order fields to match new positions
+      return next.map((b, i) => ({ ...b, order: i }));
+    });
+
+    setDraggingIndex(null);
+    dragIndexRef.current = null;
+  };
+
+  const handleDragEnd = () => {
+    setDraggingIndex(null);
+    dragIndexRef.current = null;
   };
 
   const updateBanner = (
@@ -377,7 +429,7 @@ function HomeBanner() {
         button_text: b.button_text,
         url: b.url,
         alt: b.alt,
-        order: i,
+        order: typeof b.order !== 'undefined' ? b.order : i,
         image: b.image,
       })),
     };
@@ -491,7 +543,15 @@ function HomeBanner() {
       <div className="row mb-4">
         {banners.map((banner, index) => (
           <div key={index} className="col-md-4 mb-4">
-            <div className="card h-100">
+            <div
+              className="card h-100"
+              draggable
+              onDragStart={(e) => handleDragStart(index, e)}
+              onDragOver={(e) => handleDragOver(index, e)}
+              onDrop={(e) => handleDrop(index, e)}
+              onDragEnd={handleDragEnd}
+              style={{ opacity: draggingIndex === index ? 0.5 : 1, cursor: 'grab' }}
+            >
               <img
                 src={banner.preview}
                 className="card-img-top"
