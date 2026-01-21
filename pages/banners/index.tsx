@@ -41,6 +41,47 @@ function ManageAlbums() {
   /* ======================
    * Fetch Albums
    * ====================== */
+  const isRowDeleted = (row: any) => {
+    if (!row) return false;
+    if (row.deleted_at) return true;
+    if (row.is_deleted === true) return true;
+    if (row.is_deleted === 1 || row.is_deleted === "1") return true;
+    if (row.deleted === true) return true;
+    if (row.visibility && String(row.visibility).toLowerCase() === "deleted") return true;
+    if (row.status && String(row.status).toLowerCase() === "deleted") return true;
+    return false;
+  };
+
+  const sortRowsClientSide = (rows: AlbumRow[], sortByKey: string, order: string) => {
+    const direction = String(order).toLowerCase() === "asc" ? 1 : -1;
+
+    const copy = [...rows];
+    copy.sort((a: any, b: any) => {
+      const av = a?.[sortByKey];
+      const bv = b?.[sortByKey];
+
+      // number
+      if (typeof av === "number" && typeof bv === "number") {
+        return (av - bv) * direction;
+      }
+
+      // date-ish
+      if (sortByKey === "updated_at") {
+        const ad = av ? new Date(av).getTime() : 0;
+        const bd = bv ? new Date(bv).getTime() : 0;
+        return (ad - bd) * direction;
+      }
+
+      // string fallback
+      const as = av == null ? "" : String(av).toLowerCase();
+      const bs = bv == null ? "" : String(bv).toLowerCase();
+      if (as < bs) return -1 * direction;
+      if (as > bs) return 1 * direction;
+      return 0;
+    });
+    return copy;
+  };
+
   const fetchAlbums = async () => {
     try {
       setLoading(true);
@@ -51,10 +92,17 @@ function ManageAlbums() {
         per_page: perPage,
         sort_by: sortBy,
         sort_order: sortOrder,
-        show_deleted: showDeleted,
+        // many backends expect 1/0 rather than true/false
+        show_deleted: showDeleted ? 1 : 0,
       });
 
-      setAlbums(res.data.data);
+      const apiRows: AlbumRow[] = Array.isArray(res?.data?.data) ? res.data.data : [];
+      const filteredRows = showDeleted
+        ? apiRows.filter((r: any) => isRowDeleted(r))
+        : apiRows.filter((r: any) => !isRowDeleted(r));
+
+      const sortedRows = sortRowsClientSide(filteredRows, sortBy, sortOrder);
+      setAlbums(sortedRows);
       setTotalPages(res.data.meta.last_page);
     } catch (err) {
       console.error("Failed to load albums", err);
@@ -361,12 +409,12 @@ function ManageAlbums() {
         <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 1055 }} onClick={() => setShowSettingsMenu(false)} />
           <div style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 1060 }}>
-            <div className="card shadow-sm" style={{ width: 160 }}>
-              <div className="list-group list-group-flush">
-                <button className="list-group-item list-group-item-action" onClick={openQuickEditFromMenu}>Quick Edit</button>
-                <button className="list-group-item list-group-item-action text-danger" onClick={() => { setShowSettingsMenu(false); setShowDeleteConfirm(true); }}>Delete</button>
+            <div className="card shadow-sm compact-dropdown" style={{ width: 120 }}>
+                <div className="list-group list-group-flush">
+                  <button className="list-group-item list-group-item-action" onClick={openQuickEditFromMenu} style={{padding:'6px 8px'}}>Quick Edit</button>
+                  <button className="list-group-item list-group-item-action text-danger" onClick={() => { setShowSettingsMenu(false); setShowDeleteConfirm(true); }} style={{padding:'6px 8px'}}>Delete</button>
+                </div>
               </div>
-            </div>
           </div>
         </>
       )}

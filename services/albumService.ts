@@ -29,7 +29,7 @@ export interface AlbumRow {
   updated_at: string;
 }
 
-export const getAlbums = (params?: {search?: string;page?: number;per_page?: number; sort_by?: string; sort_order?: string; show_deleted?: boolean}) => {
+export const getAlbums = (params?: {search?: string;page?: number;per_page?: number; sort_by?: string; sort_order?: string; show_deleted?: boolean | number}) => {
   return axiosInstance.get("/albums", { params });
 };
 
