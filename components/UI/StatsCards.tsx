@@ -1,69 +1,60 @@
+import Link from "next/link";
+
 interface StatsCardsProps {
   pagesCount: number;
   albumsCount: number;
   newsCount?: number; // optional for now
+  loading?: boolean;
 }
 
 export default function StatsCards({
   pagesCount,
   albumsCount,
   newsCount = 0,
+  loading = false,
 }: StatsCardsProps) {
+  const StatValue = ({ value }: { value: number }) => {
+    if (!loading) return <span className="cms-stat__value">{value}</span>;
+    return <span className="cms-skeleton cms-skeleton--number" aria-hidden="true" />;
+  };
+
   return (
-    <section className="website-summary mb-4">
-      <div className="row">
-        {/* Pages */}
-        <div className="col-md-4">
-          <div
-            className="card p-4 text-center"
-            style={{
-              backgroundColor: "#ffffff",
-              border: "1px solid #ddd",
-              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-              borderRadius: "8px",
-            }}
-          >
-            <i className="fas fa-box fa-3x mb-3" style={{ color: "#5a5a5a" }} />
-            <h5>Total Pages</h5>
-            <p className="h4">{pagesCount}</p>
-          </div>
+    <section className="cms-stats mb-4">
+      <div className="row g-3">
+        <div className="col-12 col-md-4">
+          <Link href="/pages" className="cms-stat cms-stat--pages" aria-label="Open pages">
+            <div className="cms-stat__icon">
+              <i className="fas fa-layer-group" />
+            </div>
+            <div className="cms-stat__meta">
+              <div className="cms-stat__label">Total Pages</div>
+              <StatValue value={pagesCount} />
+            </div>
+          </Link>
         </div>
 
-        {/* Albums */}
-        <div className="col-md-4">
-          <div
-            className="card p-4 text-center"
-            style={{
-              backgroundColor: "#ffffff",
-              border: "1px solid #ddd",
-              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-              borderRadius: "8px",
-            }}
-          >
-            <i className="fas fa-images fa-3x mb-3" style={{ color: "#5a5a5a" }} />
-            <h5>Total Banner Albums</h5>
-            <p className="h4">{albumsCount}</p>
-          </div>
+        <div className="col-12 col-md-4">
+          <Link href="/banners" className="cms-stat cms-stat--albums" aria-label="Open banner albums">
+            <div className="cms-stat__icon">
+              <i className="fas fa-images" />
+            </div>
+            <div className="cms-stat__meta">
+              <div className="cms-stat__label">Banner Albums</div>
+              <StatValue value={albumsCount} />
+            </div>
+          </Link>
         </div>
 
-        {/* News (future-ready) */}
-        <div className="col-md-4">
-          <div
-            className="card p-4 text-center"
-            style={{
-              backgroundColor: "#ffffff",
-              border: "1px solid #ddd",
-              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-              borderRadius: "8px",
-            }}
-          >
-            <i
-              className="fas fa-newspaper fa-3x mb-3"
-              style={{ color: "#5a5a5a" }}
-            />
-            <h5>Total News</h5>
-            <p className="h4">{newsCount}</p>
-          </div>
+        <div className="col-12 col-md-4">
+          <Link href="/news" className="cms-stat cms-stat--news" aria-label="Open news">
+            <div className="cms-stat__icon">
+              <i className="far fa-newspaper" />
+            </div>
+            <div className="cms-stat__meta">
+              <div className="cms-stat__label">Total News</div>
+              <StatValue value={newsCount} />
+            </div>
+          </Link>
         </div>
       </div>
     </section>
