@@ -6,12 +6,14 @@ import "@/styles/navigation.css";
 import "@/styles/topbar.css";
 import "@/styles/banner.css";
 import "@/styles/animations.css";
+import "@/styles/dashboard.css";
+import "@/styles/admin-sidebar.css";
 
 import "@/public/css/custom.css";
 
 import type { AppProps } from "next/app";
 import React from "react";
-import Script from "next/script";
+import Head from "next/head";
 import LoadingProvider from "@/plugins/loading/LoadingProvider";
 
 type AppPropsWithLayout = AppProps & {
@@ -23,23 +25,19 @@ type AppPropsWithLayout = AppProps & {
 export default function MyApp({ Component, pageProps }: AppPropsWithLayout) {
   const Layout = Component.Layout || React.Fragment;
 
+  React.useEffect(() => {
+    // Load Bootstrap JS locally (no CDN) to avoid browser tracking-prevention warnings.
+    import("bootstrap");
+  }, []);
+
   return (
     <LoadingProvider>
       <Layout {...pageProps}>
+        <Head>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+        </Head>
+
         <Component {...pageProps} />
-
-        <Script
-          src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-          strategy="afterInteractive"
-        />
-
-         {/* ✅ YOUR CAROUSEL JS */}
-         {/**
-        <Script
-          src="/js/custom.js"
-          strategy="afterInteractive"
-        />
-         */}
       </Layout>
     </LoadingProvider>
   );
