@@ -5,10 +5,9 @@ import {
   LayoutPreset,
 } from "@/services/layoutPresetService";
 import { toast } from "@/lib/toast";
-import { Modal } from "bootstrap";
-
 
 export default function FileManagerPage() {
+
   const [presets, setPresets] = useState<LayoutPreset[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,6 +32,13 @@ export default function FileManagerPage() {
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleteName, setDeleteName] = useState<string>("");
+
+  const getModal = async () => {
+    if (typeof window === "undefined") return null;
+
+    const bootstrap = await import("bootstrap");
+    return bootstrap.Modal;
+  };
 
   const loadPresets = async () => {
     setLoading(true);
@@ -91,7 +97,8 @@ export default function FileManagerPage() {
       setThumbnailPreview(null);
       loadPresets();
 
-      Modal.getInstance(
+      const Modal = await getModal();
+      Modal?.getInstance(
         document.getElementById("addPresetModal")!
       )?.hide();
     } catch (e) {
@@ -99,12 +106,15 @@ export default function FileManagerPage() {
     }
   };
 
-  const openDeleteModal = (preset: LayoutPreset) => {
+  const openDeleteModal = async (preset: LayoutPreset) => {
     setDeleteId(preset.id);
     setDeleteName(preset.name);
 
     const el = document.getElementById("deletePresetModal");
     if (!el) return;
+
+    const Modal = await getModal();
+    if (!Modal) return;
 
     const modal = new Modal(el);
     modal.show();
@@ -129,7 +139,7 @@ export default function FileManagerPage() {
     }
   };
 
-  const openEditModal = (preset: LayoutPreset) => {
+  const openEditModal = async (preset: LayoutPreset) => {
     setEditingId(preset.id);
     setIsEditMode(true);
     setThumbnailPreview(null);
@@ -145,10 +155,12 @@ export default function FileManagerPage() {
     const el = document.getElementById("addPresetModal");
     if (!el) return;
 
+    const Modal = await getModal();
+    if (!Modal) return;
+
     const modal = new Modal(el);
     modal.show();
   };
-
 
   return (
     <div className="container">
@@ -156,8 +168,6 @@ export default function FileManagerPage() {
         <h3>Layout Presets</h3>
         <button
           className="btn btn-primary"
-          data-bs-toggle="modal"
-          data-bs-target="#addPresetModal"
         >
           + Add Preset
         </button>
