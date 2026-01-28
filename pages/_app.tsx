@@ -9,7 +9,6 @@ import "@/styles/animations.css";
 import "@/styles/dashboard.css";
 import "@/styles/admin-sidebar.css";
 import "@/styles/admin-banners.css";
-import "@/styles/public-css.css";
 
 import "@/public/css/custom.css";
 
