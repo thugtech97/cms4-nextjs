@@ -66,3 +66,14 @@ export interface PublicFooter {
 export const getFooter = () => {
   return axiosInstance.get<{ data: PublicFooter }>(`/public/footer`);
 };
+
+export const sendContactMessage = (payload: {
+  inquiry_type: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  contact_number: string;
+  message: string;
+}) => {
+  return axiosInstance.post("/contact", payload);
+};

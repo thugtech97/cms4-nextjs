@@ -1,7 +1,56 @@
 import LandingPageLayout from "@/components/Layout/GuestLayout";
 import { getPublicPageBySlug } from "@/services/publicPageService";
+import { sendContactMessage } from "@/services/publicPageService";
+import { useState } from "react";
 
 export default function ContactUsPage() {
+  const [form, setForm] = useState({
+    inquiry_type: "",
+    first_name: "",
+    last_name: "",
+    email: "",
+    contact_number: "",
+    message: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setSuccess("");
+    setError("");
+
+    try {
+      await sendContactMessage(form);
+
+      setSuccess("Thank you! Your message has been sent successfully.");
+      setForm({
+        inquiry_type: "",
+        first_name: "",
+        last_name: "",
+        email: "",
+        contact_number: "",
+        message: "",
+      });
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message ||
+          "Something went wrong. Please try again later."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container py-5">
       {/* CONTACT DETAILS */}
@@ -60,13 +109,22 @@ export default function ContactUsPage() {
             <strong>Note:</strong> Please do not leave required fields (*) empty.
           </p>
 
-          <form>
+          <form onSubmit={submit}>
+            {success && <div className="alert alert-success">{success}</div>}
+            {error && <div className="alert alert-danger">{error}</div>}
+
             <div className="row">
               <div className="col-md-6 mb-3">
                 <label className="form-label">
                   Inquiry Type <span className="text-danger">*</span>
                 </label>
-                <select className="form-select">
+                <select
+                  className="form-select"
+                  name="inquiry_type"
+                  value={form.inquiry_type}
+                  onChange={handleChange}
+                  required
+                >
                   <option value="">— Select One —</option>
                   <option>General Inquiry</option>
                   <option>Customer Support</option>
@@ -78,60 +136,70 @@ export default function ContactUsPage() {
 
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label">
-                  First Name <span className="text-danger">*</span>
-                </label>
-                <input type="text" className="form-control" />
+                <label className="form-label">First Name *</label>
+                <input
+                  className="form-control"
+                  name="first_name"
+                  value={form.first_name}
+                  onChange={handleChange}
+                  required
+                />
               </div>
 
               <div className="col-md-6 mb-3">
-                <label className="form-label">
-                  Last Name <span className="text-danger">*</span>
-                </label>
-                <input type="text" className="form-control" />
+                <label className="form-label">Last Name *</label>
+                <input
+                  className="form-control"
+                  name="last_name"
+                  value={form.last_name}
+                  onChange={handleChange}
+                  required
+                />
               </div>
             </div>
 
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label">
-                  E-mail Address <span className="text-danger">*</span>
-                </label>
+                <label className="form-label">Email *</label>
                 <input
                   type="email"
                   className="form-control"
-                  placeholder="hello@email.com"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
                 />
               </div>
 
               <div className="col-md-6 mb-3">
-                <label className="form-label">
-                  Contact Number <span className="text-danger">*</span>
-                </label>
+                <label className="form-label">Contact Number *</label>
                 <input
-                  type="text"
                   className="form-control"
-                  placeholder="Landline or Mobile"
+                  name="contact_number"
+                  value={form.contact_number}
+                  onChange={handleChange}
+                  required
                 />
               </div>
             </div>
 
             <div className="mb-4">
-              <label className="form-label">
-                Message <span className="text-danger">*</span>
-              </label>
-              <textarea className="form-control" rows={5}></textarea>
+              <label className="form-label">Message *</label>
+              <textarea
+                className="form-control"
+                rows={5}
+                name="message"
+                value={form.message}
+                onChange={handleChange}
+                required
+              />
             </div>
 
-            <div className="d-flex gap-2">
-              <button type="submit" className="btn btn-primary">
-                Submit
-              </button>
-              <button type="reset" className="btn btn-outline-secondary">
-                Reset
-              </button>
-            </div>
+            <button className="btn btn-primary" disabled={loading}>
+              {loading ? "Sending..." : "Submit"}
+            </button>
           </form>
+
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function NewsItem({ article }: any) {
+export default function NewsCard({ article }: any) {
   const date = new Date(article.date);
   const day = date.getDate();
   const month = date.toLocaleString("en-US", { month: "short" });
