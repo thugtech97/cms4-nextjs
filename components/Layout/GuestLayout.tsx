@@ -2,6 +2,8 @@ import LandingTopbar from "./_Topbar";
 import LandingFooter from "./_Footer";
 import Banner from "./_Banner";
 import { PublicAlbum } from "@/services/publicPageService";
+import Head from "next/head";
+import Script from "next/script";
 
 interface LandingPageLayoutProps {
   children: React.ReactNode;
@@ -25,6 +27,16 @@ export default function LandingPageLayout({
 
   return (
     <div className="d-flex flex-column min-vh-100">
+      <Head>
+        {/* Public/front-end template styles only (kept out of admin pages) */}
+        <link rel="stylesheet" href="/css/public-css.css" />
+        <link rel="stylesheet" href="/css/custom.css" />
+        <link rel="stylesheet" href="/css/product.css" />
+        <link rel="stylesheet" href="/css/banner.css" />
+        <link rel="stylesheet" href="/css/navigation.css" />
+        <link rel="stylesheet" href="/css/public-overrides.css" />
+      </Head>
+
       <LandingTopbar />
 
       <Banner
@@ -37,6 +49,9 @@ export default function LandingPageLayout({
       </main>
 
       <LandingFooter />
+
+      {/* Public template scripts (no jQuery) */}
+      <Script src="/js/main.js" strategy="afterInteractive" />
     </div>
   );
 }

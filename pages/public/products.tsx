@@ -10,6 +10,7 @@ type Props = {
 	categories: any[];
 	layout?: {
 		fullWidth?: boolean;
+		hideBanner?: boolean;
 	};
 };
 
@@ -26,7 +27,6 @@ function groupByCategory(products: any[]) {
 function extractArray(payload: any): any[] {
 	if (!payload) return [];
 	let data: any = payload?.data ?? payload;
-	// Common nesting: { data: { data: [...] } }
 	if (data && typeof data === "object" && !Array.isArray(data) && "data" in data) {
 		data = (data as any).data;
 		if (data && typeof data === "object" && !Array.isArray(data) && "data" in data) {
@@ -93,12 +93,9 @@ function resolveImageUrl(src: any): string | undefined {
 	if (!src) return undefined;
 	const s = String(src);
 	if (!s) return undefined;
-	// Absolute URLs or data/blob URLs
 	if (/^(https?:)?\/\//i.test(s) || s.startsWith("data:") || s.startsWith("blob:")) return s;
-	// Normalize to a usable absolute URL for files coming from the API
 	const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
 	if (!base) return s;
-	// If API returns '/storage/..' or 'storage/..' or just a filename, serve from /storage
 	if (s.startsWith("/storage/")) return `${base}${s}`;
 	if (s.startsWith("storage/")) return `${base}/${s}`;
 	if (s.startsWith("/")) return `${base}${s}`;
@@ -109,6 +106,8 @@ export default function ProductsPublicPage({ products, categories, pageData }: P
 	const [clientProducts, setClientProducts] = useState<any[]>(products || []);
 	const [clientCategories, setClientCategories] = useState<any[]>(categories || []);
 	const [categoryQuery, setCategoryQuery] = useState<string>("");
+	const [activeCategory, setActiveCategory] = useState<string>("*");
+	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
 	useEffect(() => {
 		setClientProducts(products || []);
@@ -116,7 +115,6 @@ export default function ProductsPublicPage({ products, categories, pageData }: P
 	}, [products, categories]);
 
 	useEffect(() => {
-		// If SSR couldn't fetch (often due to auth token only available in localStorage), try in the browser.
 		if ((products && products.length) || (categories && categories.length)) return;
 
 		let cancelled = false;
@@ -127,7 +125,6 @@ export default function ProductsPublicPage({ products, categories, pageData }: P
 			};
 
 			try {
-				// Products (backend supports /products; public-* routes 404 in this environment)
 				let nextProducts: any[] = [];
 				const productEndpoints = ["/products"];
 				for (const ep of productEndpoints) {
@@ -140,7 +137,6 @@ export default function ProductsPublicPage({ products, categories, pageData }: P
 					}
 				}
 
-				// Categories (backend supports /fetch-product-categories and /product-categories)
 				let nextCategories: any[] = [];
 				const catEndpoints = ["/fetch-product-categories", "/product-categories", "/categories?type=product", "/categories"];
 				for (const ep of catEndpoints) {
@@ -198,169 +194,275 @@ export default function ProductsPublicPage({ products, categories, pageData }: P
 		<div className="products-section">
 			<div className="row g-4 mx-0">
 				<div className="col-lg-3 mb-4">
-					<div className="card products-sidebar shadow-sm">
-						<div className="card-body">
-							<div className="products-sidebar__header">
-								<h5 className="products-sidebar__title">Categories</h5>
-								<div className="products-sidebar__subtitle">Quick links to jump to a section</div>
-							</div>
-
-							<div className="products-sidebar__search">
-								<input
-									type="search"
-									value={categoryQuery}
-									onChange={(e) => setCategoryQuery(e.target.value)}
-									placeholder="Search categories…"
-									aria-label="Search categories"
-								/>
-							</div>
-
-							{effectiveCategories && effectiveCategories.length ? (
-								<nav className="products-sidebar__links" aria-label="Category quick links">
-									<a className="category-chip category-chip--all" href="#products-top">
-										<span className="chip-label">All products</span>
-										<span className="chip-count">{effectiveProducts.length}</span>
-									</a>
-
-									{navCategories.map((c: any) => {
-										const catId = getCategoryId(c);
-										return (
-											<a key={catId} className="category-chip" href={`#cat-${catId}`}>
-											<span className="chip-label">{getCategoryLabel(c)}</span>
-											<span className="chip-count">{(byCat[catId] || []).length}</span>
-										</a>
-									);
-									})}
-								</nav>
-							) : (
-								<div className="text-muted">No categories</div>
-							)}
+					<div className="sidebar-card">
+						<div className="sidebar-header">
+							<h5 className="sidebar-title">Categories</h5>
 						</div>
+
+						<div className="sidebar-search">
+							<input
+								type="search"
+								value={categoryQuery}
+								onChange={(e) => setCategoryQuery(e.target.value)}
+								placeholder="Search..."
+								aria-label="Search categories"
+								className="search-input"
+							/>
+						</div>
+
+						{effectiveCategories && effectiveCategories.length ? (
+							<nav className="category-nav" aria-label="Category quick links">
+								<button
+									className={`category-link ${activeCategory === "*" ? "active" : ""}`}
+									onClick={(e) => {
+										e.preventDefault();
+										setActiveCategory("*");
+										document.getElementById("products-top")?.scrollIntoView({ behavior: "smooth" });
+									}}
+								>
+									<span className="category-name">All Products</span>
+									<span className="category-count">{effectiveProducts.length}</span>
+								</button>
+
+								{navCategories.map((c: any) => {
+									const catId = getCategoryId(c);
+									return (
+										<button
+											key={catId}
+											className={`category-link ${activeCategory === catId ? "active" : ""}`}
+											onClick={(e) => {
+												e.preventDefault();
+												setActiveCategory(catId);
+												document.getElementById(`cat-${catId}`)?.scrollIntoView({ behavior: "smooth" });
+											}}
+										>
+											<span className="category-name">{getCategoryLabel(c)}</span>
+											<span className="category-count">{(byCat[catId] || []).length}</span>
+										</button>
+									);
+								})}
+							</nav>
+						) : (
+							<div className="sidebar-empty">
+								<p>No categories available</p>
+							</div>
+						)}
 					</div>
 				</div>
 
 				<div id="products-top" className="col-lg-9">
+					{/* View Controls */}
+					<div className="content-controls">
+						<div className="control-left">
+							<span className="result-count">{effectiveProducts.length} Products</span>
+						</div>
+						<div className="control-right">
+							<button
+								className={`view-btn ${viewMode === "grid" ? "active" : ""}`}
+								onClick={() => setViewMode("grid")}
+								aria-label="Grid view"
+								title="Grid view"
+							>
+								<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+									<rect x="3" y="3" width="5" height="5" stroke="currentColor" strokeWidth="1.5"/>
+									<rect x="12" y="3" width="5" height="5" stroke="currentColor" strokeWidth="1.5"/>
+									<rect x="3" y="12" width="5" height="5" stroke="currentColor" strokeWidth="1.5"/>
+									<rect x="12" y="12" width="5" height="5" stroke="currentColor" strokeWidth="1.5"/>
+								</svg>
+							</button>
+							<button
+								className={`view-btn ${viewMode === "list" ? "active" : ""}`}
+								onClick={() => setViewMode("list")}
+								aria-label="List view"
+								title="List view"
+							>
+								<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+									<line x1="3" y1="5" x2="17" y2="5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+									<line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+									<line x1="3" y1="15" x2="17" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+								</svg>
+							</button>
+						</div>
+					</div>
+
 					{sortedCategories && sortedCategories.length ? (
-						sortedCategories.map((c: any) => {
+						sortedCategories.map((c: any, idx: any) => {
 							const catId = getCategoryId(c);
 							return (
-							<div key={c.id ?? c.slug} id={`cat-${catId}`} className="mb-4 category-section">
-								<h4 className="mb-3 category-heading">{getCategoryLabel(c)}</h4>
-								<div className="row g-3">
-									{(byCat[catId] || []).map((p: any) => (
-										<div key={p.id ?? p.slug} className="col-md-6 col-xl-4">
-											<div className="card h-100 border-0 shadow-sm product-card">
-												<div className="product-media">
+								<div
+									key={c.id ?? c.slug}
+									id={`cat-${catId}`}
+									className="mb-5 category-section"
+									style={{ animationDelay: `${idx * 0.1}s` }}
+								>
+									<div className="category-title-wrap">
+										<h2 className="category-title">{getCategoryLabel(c)}</h2>
+									</div>
+									<div className={`product-grid ${viewMode === "list" ? "list-view" : ""}`}>
+										{(byCat[catId] || []).map((p: any, pIdx: any) => (
+											<article
+												key={p.id ?? p.slug}
+												className="product-item"
+												style={{ animationDelay: `${pIdx * 0.05}s` }}
+											>
+												<a
+													href={`/public/product/${p.slug ?? p.id}`}
+													className="product-link-wrapper"
+													aria-label={`View ${(p.name ?? p.title ?? p.slug ?? "product").toString()}`}
+												>
+													<div className="product-image-container">
 														{p.image_url || p.image ? (
 															// eslint-disable-next-line @next/next/no-img-element
 															<img
-																className="product-image"
+																className="product-img"
 																src={resolveImageUrl(p.image_url ?? p.image)}
 																alt={p.name}
-																loading="eager"
-																fetchPriority="high"
+																loading="lazy"
 																decoding="async"
 															/>
 														) : (
-														<div className="product-placeholder" />
+															<div className="product-img-placeholder">
+																<svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5">
+																	<rect x="5" y="5" width="30" height="30" rx="2"/>
+																	<circle cx="14" cy="14" r="3"/>
+																	<path d="M5 27L13 19L20 26L27 19L35 27" strokeLinecap="round" strokeLinejoin="round"/>
+																</svg>
+															</div>
 														)}
-													{p.price ? (
-														<span className="badge bg-primary price-badge">{formatPrice(p.price)}</span>
-													) : null}
 													</div>
-													<div className="card-body d-flex flex-column">
-														<a
-															href={`/public/product/${p.slug ?? p.id}`}
-															className="stretched-link"
-															aria-label={`Open ${(p.name ?? p.title ?? p.slug ?? "product").toString()}`}
-														/>
-														<h5 className="product-title">{p.name ?? p.title ?? p.slug}</h5>
-														<div className="product-meta">{(p.category && (p.category.name ?? p.category.title)) ?? p.category_name ?? ""}</div>
-													<p className="product-desc">{(p.description ?? p.teaser ?? p.summary ?? "").toString()}</p>
-													<div className="product-actions mt-auto">
-														{p.serving_size ? <small className="product-serving">{p.serving_size}</small> : null}
+
+													<div className="product-content">
+														<div className="product-header">
+															<h3 className="product-name">{p.name ?? p.title ?? p.slug}</h3>
+															{p.price && (
+																<span className="product-price">{formatPrice(p.price)}</span>
+															)}
+														</div>
+
+														{(p.description || p.teaser || p.summary) && (
+															<p className="product-description">
+																{(p.description ?? p.teaser ?? p.summary ?? "").toString()}
+															</p>
+														)}
+
+														<div className="product-meta-row">
+															{(p.category && (p.category.name ?? p.category.title)) ?? p.category_name ? (
+																<span className="product-tag">
+																	{(p.category && (p.category.name ?? p.category.title)) ?? p.category_name}
+																</span>
+															) : null}
+															{p.serving_size && (
+																<span className="product-detail">{p.serving_size}</span>
+															)}
 														</div>
 													</div>
-												</div>
-											</div>
-									))}
+												</a>
+											</article>
+										))}
+									</div>
 								</div>
-							</div>
 							);
 						})
 					) : (
 						effectiveProducts && effectiveProducts.length ? (
 							<div className="mb-4">
-								<h4 className="mb-3">Products</h4>
-								<div className="row g-3">
-									{effectiveProducts.map((p: any) => (
-										<div key={p.id ?? p.slug} className="col-md-6 col-xl-4">
-											<div className="card h-100 border-0 shadow-sm product-card">
-												<div className="product-media">
+								<div className="category-title-wrap">
+									<h2 className="category-title">All Products</h2>
+								</div>
+								<div className={`product-grid ${viewMode === "list" ? "list-view" : ""}`}>
+									{effectiveProducts.map((p: any, pIdx: any) => (
+										<article
+											key={p.id ?? p.slug}
+											className="product-item"
+											style={{ animationDelay: `${pIdx * 0.05}s` }}
+										>
+											<a
+												href={`/public/product/${p.slug ?? p.id}`}
+												className="product-link-wrapper"
+												aria-label={`View ${(p.name ?? p.title ?? p.slug ?? "product").toString()}`}
+											>
+												<div className="product-image-container">
 													{p.image_url || p.image ? (
 														// eslint-disable-next-line @next/next/no-img-element
 														<img
-															className="product-image"
+															className="product-img"
 															src={resolveImageUrl(p.image_url ?? p.image)}
 															alt={p.name}
-															loading="eager"
-															fetchPriority="high"
+															loading="lazy"
 															decoding="async"
 														/>
 													) : (
-														<div className="product-placeholder" />
+														<div className="product-img-placeholder">
+															<svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5">
+																<rect x="5" y="5" width="30" height="30" rx="2"/>
+																<circle cx="14" cy="14" r="3"/>
+																<path d="M5 27L13 19L20 26L27 19L35 27" strokeLinecap="round" strokeLinejoin="round"/>
+															</svg>
+														</div>
 													)}
-													{p.price ? (
-														<span className="badge bg-primary price-badge">{formatPrice(p.price)}</span>
-													) : null}
 												</div>
-												<div className="card-body d-flex flex-column">
-													<a
-														href={`/public/product/${p.slug ?? p.id}`}
-														className="stretched-link"
-														aria-label={`Open ${(p.name ?? p.title ?? p.slug ?? "product").toString()}`}
-													/>
-													<h5 className="product-title">{p.name ?? p.title ?? p.slug}</h5>
-													<div className="product-meta">{(p.category && (p.category.name ?? p.category.title)) ?? p.category_name ?? ""}</div>
-													<p className="product-desc">{(p.description ?? p.teaser ?? p.summary ?? "").toString()}</p>
-													<div className="product-actions mt-auto">
-														{p.serving_size ? <small className="product-serving">{p.serving_size}</small> : null}
+
+												<div className="product-content">
+													<div className="product-header">
+														<h3 className="product-name">{p.name ?? p.title ?? p.slug}</h3>
+														{p.price && (
+															<span className="product-price">{formatPrice(p.price)}</span>
+														)}
+													</div>
+
+													{(p.description || p.teaser || p.summary) && (
+														<p className="product-description">
+															{(p.description ?? p.teaser ?? p.summary ?? "").toString()}
+														</p>
+													)}
+
+													<div className="product-meta-row">
+														{(p.category && (p.category.name ?? p.category.title)) ?? p.category_name ? (
+															<span className="product-tag">
+																{(p.category && (p.category.name ?? p.category.title)) ?? p.category_name}
+															</span>
+														) : null}
+														{p.serving_size && (
+															<span className="product-detail">{p.serving_size}</span>
+														)}
 													</div>
 												</div>
-											</div>
-										</div>
+											</a>
+										</article>
 									))}
 								</div>
 							</div>
 						) : (
-							<div className="card">
-								<div className="card-body">No products found.</div>
+							<div className="empty-content">
+								<svg width="64" height="64" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2">
+									<circle cx="32" cy="32" r="24"/>
+									<path d="M32 24v16M32 44h.01" strokeLinecap="round"/>
+								</svg>
+								<h3>No products found</h3>
+								<p>Check back later for new items</p>
 							</div>
 						)
 					)}
 				</div>
-				</div>
+			</div>
 		</div>
 	);
 }
 
 export async function getServerSideProps() {
 	try {
-		// Attempt to fetch a public page config (optional)
 		const pageRes = await getPublicPageBySlug("products");
 
-		// Fetch products via productService (robust client used by admin) and fall back to common public endpoints
 		let products: any[] = [];
 		try {
 			const res = await productService.getProducts({ per_page: 1000 });
 			const data = res?.data ?? res ?? [];
 			products = Array.isArray(data) ? data : data?.items ?? data?.rows ?? data?.data ?? [];
 		} catch (e: any) {
-			// ignore and fall back to endpoint tries
+			// ignore
 		}
 
 		if (!products || products.length === 0) {
-			// This backend does not expose public-* routes; use /products only.
 			const productEndpoints = ["/products"];
 			for (const ep of productEndpoints) {
 				try {
@@ -374,14 +476,16 @@ export async function getServerSideProps() {
 			}
 		}
 
-		// Categories: try several endpoints and absolute fallbacks
 		let categories: any[] = [];
 		const catEndpoints = ["/fetch-product-categories", "/product-categories", "/categories?type=product", "/categories"];
 		for (const ep of catEndpoints) {
 			try {
 				const cresp = await axiosInstance.get(ep, { params: { per_page: 1000 }, headers: { "X-No-Loading": true } });
 				const cdata = cresp.data?.data ?? cresp.data ?? [];
-				if (Array.isArray(cdata) && cdata.length) { categories = cdata; break; }
+				if (Array.isArray(cdata) && cdata.length) {
+					categories = cdata;
+					break;
+				}
 			} catch {
 				// try next
 			}
@@ -409,4 +513,3 @@ export async function getServerSideProps() {
 }
 
 ProductsPublicPage.Layout = LandingPageLayout;
-

@@ -1,0 +1,22 @@
+/* Public overrides loaded AFTER /css/public-css.css (which imports main.css).
+   Fix template rule in main.css: `input { border: none !important; }`
+   by restoring Bootstrap-like borders where we use .form-control/.form-select.
+*/
+
+/* Contact Us page form controls */
+.public-contact .form-control,
+.public-contact .form-select {
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.public-contact textarea.form-control {
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+}
+
+.public-contact .form-control:focus,
+.public-contact .form-select:focus {
+  border-color: rgba(13, 110, 253, 0.55) !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15) !important;
+}

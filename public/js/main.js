@@ -28,10 +28,25 @@
         initFixedHeader();
         initSidebar();
         initGalleryFilter();
+        initGalleryPagination();
         initGLightbox();
         initDynamicContentObserver();
         initParallax();
         initCopyrightYear();
+    }
+
+    function applyGalleryItemVisibility(item) {
+        if (!item) return;
+        const filterHidden = item.dataset && item.dataset.filterHidden === '1';
+        const pageHidden = item.dataset && item.dataset.pageHidden === '1';
+
+        if (filterHidden || pageHidden) {
+            item.style.display = 'none';
+            item.classList.add('hidden');
+        } else {
+            item.style.display = '';
+            item.classList.remove('hidden');
+        }
     }
 
     /**
@@ -264,37 +279,112 @@
      * Gallery Filter (CSS Grid replacement for Isotope)
      */
     function initGalleryFilter() {
-        const filterGroup = document.querySelector('.filter-tope-group');
-        const grid = document.querySelector('.isotope-grid');
+        const filterGroups = document.querySelectorAll('.filter-tope-group');
+        if (!filterGroups || filterGroups.length === 0) return;
 
-        if (!filterGroup || !grid) return;
+        filterGroups.forEach(filterGroup => {
+            if (filterGroup.dataset && filterGroup.dataset.patoFilterInit === '1') return;
+            if (filterGroup.dataset) filterGroup.dataset.patoFilterInit = '1';
 
-        const items = grid.querySelectorAll('.isotope-item');
-        const labels = filterGroup.querySelectorAll('.label-gallery');
+            const scope = filterGroup.closest('.section-gallery') || document;
+            const grid = scope.querySelector('.isotope-grid') || document.querySelector('.isotope-grid');
+            if (!grid) return;
 
-        labels.forEach(label => {
-            label.addEventListener('click', () => {
-                // Update active state
-                labels.forEach(l => l.classList.remove('is-actived'));
-                label.classList.add('is-actived');
+            const items = grid.querySelectorAll('.isotope-item');
+            const labels = filterGroup.querySelectorAll('.label-gallery');
+            if (!labels || labels.length === 0) return;
 
-                // Filter items
-                const filter = label.dataset.filter;
+            labels.forEach(label => {
+                label.addEventListener('click', (e) => {
+                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
 
-                items.forEach(item => {
-                    if (filter === '*') {
-                        item.style.display = '';
-                        item.classList.remove('hidden');
-                    } else {
-                        if (item.classList.contains(filter.replace('.', ''))) {
-                            item.style.display = '';
-                            item.classList.remove('hidden');
-                        } else {
-                            item.style.display = 'none';
-                            item.classList.add('hidden');
-                        }
-                    }
+                    // Update active state
+                    labels.forEach(l => l.classList.remove('is-actived'));
+                    label.classList.add('is-actived');
+
+                    // Filter items
+                    const filter = label.dataset.filter;
+                    const className = (filter || '').replace('.', '');
+
+                    items.forEach(item => {
+                        const shouldShow = !filter || filter === '*' || item.classList.contains(className);
+                        if (item.dataset) item.dataset.filterHidden = shouldShow ? '0' : '1';
+                        applyGalleryItemVisibility(item);
+                    });
+
+                    // Reset to page 1 after filter changes
+                    initGalleryPagination();
                 });
+            });
+        });
+    }
+
+    /**
+     * Gallery Pagination (works with Gallery Filter)
+     * Expects markup like:
+     *  - .section-gallery
+     *  - .isotope-grid containing .isotope-item
+     *  - .pagination containing .item-pagination anchors
+     */
+    function initGalleryPagination() {
+        const sections = document.querySelectorAll('.section-gallery');
+        if (!sections || sections.length === 0) return;
+
+        sections.forEach(section => {
+            const grid = section.querySelector('.isotope-grid');
+            const pagination = section.querySelector('.pagination');
+            if (!grid || !pagination) return;
+
+            const items = Array.from(grid.querySelectorAll('.isotope-item'));
+            if (items.length === 0) return;
+
+            // Prevent wiring twice on the same pagination container
+            if (pagination.dataset && pagination.dataset.patoPaginationInit === '1') {
+                // Still re-render because filter changes the number of visible items
+            } else {
+                if (pagination.dataset) pagination.dataset.patoPaginationInit = '1';
+            }
+
+            const perPageAttr = grid.getAttribute('data-per-page') || pagination.getAttribute('data-per-page');
+            const perPage = Math.max(1, parseInt(perPageAttr || '9', 10) || 9);
+
+            const filteredItems = items.filter(it => !(it.dataset && it.dataset.filterHidden === '1'));
+            const totalPages = Math.max(1, Math.ceil(filteredItems.length / perPage));
+
+            let currentPage = parseInt(pagination.getAttribute('data-current-page') || '1', 10) || 1;
+            if (currentPage > totalPages) currentPage = 1;
+            pagination.setAttribute('data-current-page', String(currentPage));
+
+            // Rebuild pagination UI (keeps it consistent with totalPages)
+            pagination.innerHTML = '';
+            for (let page = 1; page <= totalPages; page++) {
+                const a = document.createElement('a');
+                a.className = 'item-pagination flex-c-m trans-0-4';
+                if (page === currentPage) a.classList.add('active-pagination');
+                a.href = '#';
+                a.textContent = String(page);
+                a.addEventListener('click', (e) => {
+                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                    pagination.setAttribute('data-current-page', String(page));
+                    initGalleryPagination();
+                });
+                pagination.appendChild(a);
+            }
+
+            // Apply page visibility
+            const start = (currentPage - 1) * perPage;
+            const end = start + perPage;
+            filteredItems.forEach((item, idx) => {
+                if (item.dataset) item.dataset.pageHidden = (idx >= start && idx < end) ? '0' : '1';
+                applyGalleryItemVisibility(item);
+            });
+
+            // Ensure filtered-out items remain hidden
+            items.forEach(item => {
+                if (item.dataset && item.dataset.filterHidden === '1') {
+                    if (item.dataset) item.dataset.pageHidden = '0';
+                    applyGalleryItemVisibility(item);
+                }
             });
         });
     }
@@ -386,6 +476,8 @@
             if (document.body && document.body.classList.contains('glightbox-open')) return;
             clearTimeout(glightboxRefreshTimer);
             glightboxRefreshTimer = setTimeout(() => {
+                initGalleryFilter();
+                initGalleryPagination();
                 initGLightbox();
             }, 100);
         });

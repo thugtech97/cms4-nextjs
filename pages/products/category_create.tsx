@@ -138,7 +138,7 @@ export default function CreateProductCategory() {
 
     const tryUpdateOrder = async (category: CategoryRow, order: number) => {
       const id = category.id;
-      const endpoints = [`/product-categories/${id}`, `/categories/${id}`];
+      const endpoints = [`/product-categories/${id}`];
       // Some backends validate strictly; try one key at a time.
       const bodies: any[] = [
         // strict backends might require name/title on update
@@ -234,7 +234,7 @@ export default function CreateProductCategory() {
   const handleSubmit = async () => {
     if (!name) return toast.error("Please provide category name");
 
-    const endpoints = ["/product-categories", "/create-product-category", "/categories"];
+    const endpoints = ["/product-categories", "/create-product-category"];
     let created: any = null;
     try {
       for (const ep of endpoints) {
@@ -303,24 +303,38 @@ export default function CreateProductCategory() {
                           <button className="btn btn-sm btn-primary" onClick={async () => {
                             if (!editingName.trim()) return toast.error('Name required');
                             try {
-                              // try update endpoints
-                              const endpoints = [`/product-categories/${c.id}`, `/categories/${c.id}`];
+                              const id = c.id;
+                              const nextName = editingName.trim();
                               let ok = false;
-                              for (const ep of endpoints) {
+                              let lastErr: any = null;
+
+                              const attempts: Array<() => Promise<any>> = [
+                                // Try REST-style update first (if backend supports it)
+                                () => axiosInstance.put(`/product-categories/${id}`, { name: nextName, title: nextName }),
+                                () => axiosInstance.patch(`/product-categories/${id}`, { name: nextName, title: nextName }),
+                                () => axiosInstance.post(`/product-categories/${id}`, { name: nextName, title: nextName, _method: 'PUT' } as any),
+                              ];
+
+                              for (const attempt of attempts) {
                                 try {
-                                  const res = await axiosInstance.put(ep, { name: editingName.trim(), title: editingName.trim() });
+                                  await attempt();
                                   ok = true;
                                   break;
                                 } catch (e) {
-                                  // try post override
-                                  try {
-                                    const body = { name: editingName.trim(), title: editingName.trim(), _method: 'PUT' } as any;
-                                    await axiosInstance.post(ep, body);
-                                    ok = true; break;
-                                  } catch (ee) { }
+                                  lastErr = e;
                                 }
                               }
-                              if (!ok) throw new Error('Update failed');
+
+                              if (!ok) {
+                                const status = lastErr?.response?.status;
+                                const message = lastErr?.response?.data?.message || lastErr?.message || 'Failed to update category';
+                                toast.error(
+                                  status === 405
+                                    ? 'Update failed: backend does not support updating product categories.'
+                                    : message
+                                );
+                                return;
+                              }
                               toast.success('Category updated');
                               setEditingId(null); setEditingName('');
                               await loadCategories();
@@ -375,14 +389,48 @@ export default function CreateProductCategory() {
         onConfirm={async () => {
           if (!showDeleteConfirmId) return;
           try {
-            const endpoints = [`/product-categories/${showDeleteConfirmId}`, `/categories/${showDeleteConfirmId}`];
+            const id = showDeleteConfirmId;
+            const endpoints = [`/product-categories/${id}`];
             let ok = false;
+            let lastErr: any = null;
+
+            const attempts: Array<() => Promise<any>> = [];
+
+            // Standard REST-style endpoints
             for (const ep of endpoints) {
-              try { await axiosInstance.delete(ep); ok = true; break; } catch (e) {
-                try { await axiosInstance.post(ep, { _method: 'DELETE' }); ok = true; break; } catch (ee) { }
+              attempts.push(() => axiosInstance.delete(ep));
+              attempts.push(() => axiosInstance.post(ep, { _method: "DELETE" }));
+
+              // Some servers accept DELETE with request body
+              attempts.push(() => axiosInstance.delete(ep, { data: { id } } as any));
+            }
+
+            for (const attempt of attempts) {
+              try {
+                await attempt();
+                ok = true;
+                break;
+              } catch (e) {
+                lastErr = e;
               }
             }
-            if (!ok) throw new Error('Delete failed');
+
+            if (!ok) {
+              const status = lastErr?.response?.status;
+              const message = lastErr?.response?.data?.message || lastErr?.message || 'Failed to delete category';
+              const validationNameRequired =
+                typeof message === "string" && message.toLowerCase().includes("name") && message.toLowerCase().includes("required");
+              // Many backends in this project expose only GET/POST for /product-categories (no /:id route)
+              toast.error(
+                status === 404
+                  ? 'Delete failed: backend has no delete route for product categories (needs something like DELETE /product-categories/{id}).'
+                  : status === 422 && validationNameRequired
+                  ? 'Delete failed: backend treated this request like “create/update” (requires name). A dedicated delete endpoint is missing.'
+                  : message
+              );
+              setShowDeleteConfirmId(null);
+              return;
+            }
             toast.success('Category deleted');
             setShowDeleteConfirmId(null);
             await loadCategories();
