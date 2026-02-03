@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Sidebar from './_Sidebar';
 import Topbar from './_Topbar2';
 import ToastHost from "@/components/UI/ToastHost";
+import Head from "next/head";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -34,6 +35,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         sidebarOpen ? "cms-admin-layout--sidebar-open" : ""
       }`}
     >
+      <Head>
+        {/* Admin-only styles: loaded here to avoid affecting GuestLayout */}
+        <link rel="stylesheet" href="/css/custom.css" />
+         <link rel="stylesheet" href="/css/admin.css" />
+      </Head>
+
       <div className="cms-sidebar-overlay" onClick={closeSidebar} />
 
       <Sidebar

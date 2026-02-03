@@ -52,7 +52,7 @@ export default function ContactUsPage() {
   };
 
   return (
-    <div className="container py-5">
+    <div className="container py-5 public-contact">
       {/* CONTACT DETAILS */}
       <div className="row mb-5">
         {/* MAP */}

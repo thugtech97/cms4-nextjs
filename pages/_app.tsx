@@ -1,13 +1,8 @@
 import "bootstrap/dist/css/bootstrap.min.css"; //AdminLayout
 import "@fortawesome/fontawesome-free/css/all.min.css"; //AdminLayout
 
-import "@/styles/navigation.css"; // GuestLayout
-import "@/styles/banner.css"; // GuestLayout
-import "@/styles/dashboard.css"; // AdminLayout
-import "@/styles/admin-sidebar.css"; // AdminLayout
-import "@/styles/admin-banners.css"; // AdminLayout
-
-import "@/public/css/custom.css"; //AdminLayout
+// NOTE: Admin template styles are loaded in AdminLayout via <link href="/css/admin.css" />
+// to prevent global CSS from merging into GuestLayout.
 
 import type { AppProps } from "next/app";
 import React from "react";
