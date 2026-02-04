@@ -31,7 +31,6 @@ export default function ContactUsPage() {
 
     try {
       await sendContactMessage(form);
-
       setSuccess("Thank you! Your message has been sent successfully.");
       setForm({
         inquiry_type: "",
@@ -52,154 +51,166 @@ export default function ContactUsPage() {
   };
 
   return (
-    <div className="container py-5 public-contact">
-      {/* CONTACT DETAILS */}
-      <div className="row mb-5">
-        {/* MAP */}
-        <div className="col-lg-7 mb-4">
-          <iframe
-            src="https://www.google.com/maps?q=Davao%20City%2C%20Philippines&t=&z=13&ie=UTF8&iwloc=&output=embed"
-            width="100%"
-            height="350"
-            style={{ border: 0 }}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-        </div>
+    <div className="container">
+      <div className="p-t-80 p-b-80">
 
-        {/* DETAILS */}
-        <div className="col-lg-5">
-          <h5 className="fw-bold mb-3">Contact Details</h5>
+        <div className="row">
 
-          <p className="mb-2">
-            <i className="fa fa-map-marker me-2 text-primary"></i>
-            3rd Floor, ABC Building, J.P. Laurel Avenue,
-            Bajada, Davao City, 8000 Philippines
-          </p>
+          {/* LEFT – CONTACT INFO */}
+          <div className="col-md-4 col-lg-3">
+            <div className="sidebar2 p-b-40">
 
-          <p className="mb-2">
-            <i className="fa fa-phone me-2 text-primary"></i>
-            (+63) 82 295-1234<br />
-            (+63) 82 295-5678
-          </p>
+              <h4 className="p-b-20">Our Office</h4>
 
-          <p className="mb-2">
-            <i className="fa fa-envelope me-2 text-primary"></i>
-            info@yourcompany.com
-          </p>
+              <p className="txt14 p-b-10">
+                3rd Floor, ABC Building<br />
+                J.P. Laurel Avenue, Bajada<br />
+                Davao City, Philippines
+              </p>
 
-          <p className="mb-2">
-            <i className="fa fa-clock-o me-2 text-primary"></i>
-            <strong>Monday – Friday:</strong> 8:00AM – 5:00PM
-          </p>
+              <p className="txt14 p-b-10">
+                📞 (+63) 82 295-1234<br />
+                ✉ info@yourcompany.com
+              </p>
 
-          <p className="mt-3">
-            <a href="#" className="text-primary fs-5">
-              <i className="fa fa-facebook-square"></i>
-            </a>
-          </p>
-        </div>
-      </div>
+              <p className="txt14">
+                🕘 Mon – Fri<br />
+                8:00 AM – 5:00 PM
+              </p>
 
-      {/* CONTACT FORM */}
-      <div className="row">
-        <div className="col-lg-12">
-          <h5 className="fw-bold mb-3">Leave Us a Message</h5>
-          <p className="text-muted small">
-            <strong>Note:</strong> Please do not leave required fields (*) empty.
-          </p>
-
-          <form onSubmit={submit}>
-            {success && <div className="alert alert-success">{success}</div>}
-            {error && <div className="alert alert-danger">{error}</div>}
-
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label">
-                  Inquiry Type <span className="text-danger">*</span>
-                </label>
-                <select
-                  className="form-select"
-                  name="inquiry_type"
-                  value={form.inquiry_type}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">— Select One —</option>
-                  <option>General Inquiry</option>
-                  <option>Customer Support</option>
-                  <option>Business Partnership</option>
-                  <option>Careers</option>
-                </select>
-              </div>
             </div>
+          </div>
 
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label">First Name *</label>
-                <input
-                  className="form-control"
-                  name="first_name"
-                  value={form.first_name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+          {/* RIGHT – FORM + MAP */}
+          <div className="col-md-8 col-lg-9">
 
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Last Name *</label>
-                <input
-                  className="form-control"
-                  name="last_name"
-                  value={form.last_name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Email *</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Contact Number *</label>
-                <input
-                  className="form-control"
-                  name="contact_number"
-                  value={form.contact_number}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <label className="form-label">Message *</label>
-              <textarea
-                className="form-control"
-                rows={5}
-                name="message"
-                value={form.message}
-                onChange={handleChange}
-                required
+            {/* MAP */}
+            <div className="blo4 bo-rad-10 of-hidden m-b-40">
+              <iframe
+                src="https://www.google.com/maps?q=Davao%20City%2C%20Philippines&t=&z=13&ie=UTF8&iwloc=&output=embed"
+                width="100%"
+                height="300"
+                style={{ border: 0 }}
+                loading="lazy"
               />
             </div>
 
-            <button className="btn btn-primary" disabled={loading}>
-              {loading ? "Sending..." : "Submit"}
-            </button>
-          </form>
+            {/* FORM */}
+            <div className="blo4 p-30">
+              <h4 className="p-b-20">Send Us a Message</h4>
 
+              {success && <p className="txt14 text-success p-b-10">{success}</p>}
+              {error && <p className="txt14 text-danger p-b-10">{error}</p>}
+
+              <form onSubmit={submit}>
+                {/* INQUIRY TYPE */}
+                <div className="row p-b-25">
+                  <div className="col-md-6">
+                    <label className="txt14 p-b-5 dis-block">Inquiry Type *</label>
+                    <div className="size30 bo2 bo-rad-10">
+                      <select
+                        className="sizefull txt14 p-l-20 p-r-20"
+                        name="inquiry_type"
+                        value={form.inquiry_type}
+                        onChange={handleChange}
+                        required
+                      >
+                        <option value="">Select inquiry type</option>
+                        <option>General Inquiry</option>
+                        <option>Customer Support</option>
+                        <option>Business Partnership</option>
+                        <option>Careers</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* NAME */}
+                <div className="row p-b-25">
+                  <div className="col-md-6">
+                    <label className="txt14 p-b-5 dis-block">First Name *</label>
+                    <div className="size30 bo2 bo-rad-10">
+                      <input
+                        className="sizefull txt14 p-l-20 p-r-20"
+                        name="first_name"
+                        value={form.first_name}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="txt14 p-b-5 dis-block">Last Name *</label>
+                    <div className="size30 bo2 bo-rad-10">
+                      <input
+                        className="sizefull txt14 p-l-20 p-r-20"
+                        name="last_name"
+                        value={form.last_name}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* CONTACT */}
+                <div className="row p-b-25">
+                  <div className="col-md-6">
+                    <label className="txt14 p-b-5 dis-block">Email *</label>
+                    <div className="size30 bo2 bo-rad-10">
+                      <input
+                        type="email"
+                        className="sizefull txt14 p-l-20 p-r-20"
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="txt14 p-b-5 dis-block">Contact Number *</label>
+                    <div className="size30 bo2 bo-rad-10">
+                      <input
+                        className="sizefull txt14 p-l-20 p-r-20"
+                        name="contact_number"
+                        value={form.contact_number}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* MESSAGE */}
+                <div className="p-b-30">
+                  <label className="txt14 p-b-5 dis-block">Message *</label>
+                  <div className="bo2 bo-rad-10">
+                    <textarea
+                      className="sizefull txt14 p-l-20 p-r-20 p-t-15"
+                      rows={6}
+                      name="message"
+                      value={form.message}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn3 flex-c-m size31 txt11 trans-0-4"
+                  disabled={loading}
+                >
+                  {loading ? "Sending..." : "Submit Message"}
+                </button>
+              </form>
+
+            </div>
+
+          </div>
         </div>
       </div>
     </div>
@@ -207,10 +218,8 @@ export default function ContactUsPage() {
 }
 
 export async function getServerSideProps() {
-  const page = "contact-us";
-
   try {
-    const res = await getPublicPageBySlug(page);
+    const res = await getPublicPageBySlug("contact-us");
     return { props: { pageData: res.data } };
   } catch {
     return { notFound: true };
