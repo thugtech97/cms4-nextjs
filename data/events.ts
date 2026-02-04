@@ -45,7 +45,7 @@ A hands-on workshop aimed at sharing knowledge with the local tech community.
 
 Topics included web development fundamentals, UI/UX basics, and career advice.
     `,
-    images: ["blog-11.jpg", "blog-12.jpg", "blog-13.jpg"],
+    images: ["blog-05.jpg", "blog-06.jpg", "blog-07.jpg"],
   },
 
   {
@@ -84,7 +84,7 @@ A 24-hour internal hackathon where teams built experimental features and tools.
 
 The event encouraged creativity, collaboration, and rapid prototyping.
     `,
-    images: ["blog-12.jpg", "blog-13.jpg", "blog-14.jpg"],
+    images: ["blog-05.jpg", "blog-06.jpg", "blog-07.jpg"],
   },
 
   {
@@ -97,7 +97,7 @@ An evening dedicated to celebrating our clients and partners.
 
 The night featured presentations, dinner, and informal networking.
     `,
-    images: ["blog-15.jpg", "blog-14.jpg", "blog-10.jpg"],
+    images: ["blog-05.jpg", "blog-06.jpg", "blog-07.jpg"],
   },
 
   {
