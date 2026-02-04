@@ -31,16 +31,19 @@ export default function EventGallery({ images }: Props) {
   }, [index, images.length]);
 
   return (
-    <div className="bo-rad-10 of-hidden pos-relative" style={{ width: 600 }}>
+    <div
+      className="bo-rad-10 of-hidden pos-relative"
+      style={{ width: "100%", maxWidth: 600, aspectRatio: "3 / 2", position: "relative" }}
+    >
       <Image
         key={index}
         src={`/images/${images[index]}`}
         alt="Event image"
-        width={600}
-        height={400}
+        fill
+        sizes="(max-width: 768px) 100vw, 600px"
         style={{
-          width: "100%",
-          height: "auto",
+          objectFit: "cover",
+          objectPosition: "center",
           opacity: fade ? 1 : 0,
           transition: "opacity 0.3s ease-in-out",
         }}
