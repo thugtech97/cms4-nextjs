@@ -52,7 +52,7 @@ export default function MenuItem({
       <div className="menu-row">
         {isInternal ? (
           <Link href={href} className="menu-link" onClick={handleLinkClick}>
-            <span>{item.label}</span>
+            <span>{item.label.toUpperCase()}</span>
           </Link>
         ) : (
           <a
@@ -62,7 +62,7 @@ export default function MenuItem({
             rel="noopener noreferrer"
             onClick={handleLinkClick}
           >
-            <span>{item.label}</span>
+            <span>{item.label.toUpperCase()}</span>
           </a>
         )}
 

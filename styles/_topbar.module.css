@@ -43,7 +43,7 @@
 .topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .brand { display: flex; align-items: center; gap:12px; text-decoration: none; color: inherit; margin-right: 12px }
 .logo-box{height:64px;border-radius:12px;background:transparent;display:inline-flex;align-items:center;justify-content:center;padding:6px;margin-left:12px;overflow:visible}
-.logo-img{width:96px;height:56px;object-fit:contain;display:block;border-radius:6px}
+.logo-img{width:140px;height:80px;object-fit:contain;display:block;border-radius:6px}
 .brand-text { font-weight:800; font-size:1rem; letter-spacing:0.8px; color:#fff; text-decoration:none }
 
 .nav-list { display:flex; flex-direction:row; gap: 18px; align-items:center; margin:0; padding:0; list-style:none; white-space:nowrap }
@@ -150,6 +150,13 @@
 @media (min-width: 992px){
   /* show input when focused; JS will set focus to open it */
   .search-wrapper:hover .search-input{width:160px;opacity:1}
+}
+
+@media (max-width: 768px) {
+  .logo-img {
+    width: 110px;
+    height: 64px;
+  }
 }
 
 .mobile-toggle {
