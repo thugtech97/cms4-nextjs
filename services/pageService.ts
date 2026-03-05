@@ -6,6 +6,10 @@ export interface CreatePagePayload {
   parent_page_id?: number | null;
   album_id?: number | null;
   contents?: string;
+  grapes_html?: string;
+  grapes_css?: string;
+  grapes_js?: string;
+  content_type?: "tiny" | "grapes";
   status: "published" | "private" | "draft";
   meta_title?: string;
   meta_description?: string;

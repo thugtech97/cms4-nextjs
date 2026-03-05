@@ -18,6 +18,7 @@ export default function Topbar({ onToggleSidebar, sidebarToggleRef }: TopbarProp
   const dropdownRef = React.useRef<any>(null);
   const [currentUser, setCurrentUser] = React.useState<User | null>(null);
   const [logoUrl, setLogoUrl] = React.useState<string | undefined>(undefined);
+  const [logoFailed, setLogoFailed] = React.useState(false);
 
   const refreshUser = React.useCallback(async (opts?: { force?: boolean }) => {
     try {
@@ -48,6 +49,10 @@ export default function Topbar({ onToggleSidebar, sidebarToggleRef }: TopbarProp
     const unsub = subscribeWebsiteSettingsUpdated(() => refreshLogo({ force: true }));
     return () => unsub();
   }, [refreshLogo]);
+
+  React.useEffect(() => {
+    setLogoFailed(false);
+  }, [logoUrl]);
 
   const avatarUrl = React.useMemo(() => resolveAvatarUrl(currentUser?.avatar), [currentUser?.avatar]);
   const initials = React.useMemo(() => initialsForUser(currentUser), [currentUser]);
@@ -87,13 +92,20 @@ export default function Topbar({ onToggleSidebar, sidebarToggleRef }: TopbarProp
       <nav className="navbar navbar-light bg-white shadow-sm px-4" style={{ height: '64px' }}>
         <div className="container-fluid w-100 flex-grow-1 d-flex justify-content-between align-items-center gap-2">
         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
-          {logoUrl ? (
+          {logoUrl && !logoFailed ? (
             <img
               src={logoUrl}
               alt="Logo"
+              onError={() => setLogoFailed(true)}
               style={{ height: 34, width: "auto", objectFit: "contain", display: "block" }}
             />
-          ) : null}
+          ) : (
+            <img
+              src="/images/logo.png"
+              alt="Logo"
+              style={{ height: 34, width: "auto", objectFit: "contain", display: "block" }}
+            />
+          )}
         </div>
 
         <div className="d-flex align-items-center gap-2">

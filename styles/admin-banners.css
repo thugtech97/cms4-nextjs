@@ -4,11 +4,6 @@
 
 .cms-banner-card {
   position: relative;
-  cursor: grab;
-}
-
-.cms-banner-card:active {
-  cursor: grabbing;
 }
 
 .cms-banner-card input,
@@ -17,6 +12,10 @@
 .cms-banner-card button,
 .cms-banner-card a {
   cursor: auto;
+}
+
+.cms-banner-card .card-img-top {
+  cursor: grab;
 }
 
 .cms-banner-drag-handle {
@@ -35,8 +34,9 @@
   justify-content: center;
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
   border: 1px solid rgba(15, 23, 42, 0.12);
-  pointer-events: none;
+  pointer-events: auto;
   user-select: none;
+  cursor: grab;
 }
 
 .cms-banner-drag-handle:hover {
@@ -45,6 +45,10 @@
 
 .cms-banner-drag-handle:active {
   cursor: grabbing;
+}
+
+.cms-banner-drag-handle i {
+  pointer-events: none;
 }
 
 /* Make it obvious when dragging */

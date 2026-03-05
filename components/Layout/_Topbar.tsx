@@ -86,7 +86,7 @@ export default function LandingTopbar() {
     <header className={`${styles['topbar-dark']} ${scrolled ? styles.scrolled : ''}`}>
       <div className={styles['topbar-inner']}>
         <div className="left">
-          <Link href="/" className={styles.brand}>
+          <Link href="/public/home" className={styles.brand}>
             <span className={styles['logo-box']}>
               <img
                 src={logoUrl || "/images/logo-light.png"}

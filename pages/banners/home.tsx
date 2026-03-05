@@ -389,8 +389,15 @@ function HomeBanner() {
   };
 
   const handleDragStart = (index: number, e: React.DragEvent) => {
-    // Allow dragging the whole card, but avoid accidental drags while editing fields.
     const target = e.target as HTMLElement | null;
+    const startedFromAllowedArea = !!target?.closest(
+      ".cms-banner-drag-handle, .card-img-top"
+    );
+    if (!startedFromAllowedArea) {
+      e.preventDefault();
+      return;
+    }
+
     if (
       target?.closest(
         "input, textarea, select, option, button, a, [contenteditable='true'], [data-no-drag='true']"
@@ -1150,8 +1157,7 @@ function HomeBanner() {
                 src={banner.preview}
                 className="card-img-top"
                 alt="Banner"
-                draggable={false}
-                onDragStart={(e) => e.preventDefault()}
+                draggable
                 style={{ height: "200px", objectFit: "cover" }}
               />
 

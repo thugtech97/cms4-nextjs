@@ -36,6 +36,10 @@ export interface PublicPage {
   title: string;
   slug: string;
   content: string;
+  content_type?: "tiny" | "grapes";
+  grapes_html?: string;
+  grapes_css?: string;
+  grapes_js?: string;
   album?: PublicAlbum | null;
   meta?: {
     title?: string;

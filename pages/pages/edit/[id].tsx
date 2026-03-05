@@ -8,6 +8,10 @@ import { getMenus } from "@/services/menuService";
 import { toast } from "@/lib/toast";
 import AiAssistant from "@/components/AI/AiAssistant";
 import SelectPreset from "@/components/UI/SelectPreset";
+import dynamic from "next/dynamic";
+import { composeContentFromGrapes, extractGrapesParts } from "@/lib/grapesContent";
+
+const GrapesEditor = dynamic(() => import("@/components/UI/GrapesEditor"), { ssr: false });
 
 function EditPage() {
   const router = useRouter();
@@ -16,7 +20,9 @@ function EditPage() {
   // Page state
   const [title, setTitle] = useState("");
   const [label, setLabel] = useState("");
-  const [content, setContent] = useState("");
+  const [tinyContent, setTinyContent] = useState("");
+  const [grapesContent, setGrapesContent] = useState("");
+  const [editorType, setEditorType] = useState<"tinymce" | "grapesjs">("tinymce");
   const [visibility, setVisibility] = useState(true);
   const [albumId, setAlbumId] = useState<number | "">("");
   const [albums, setAlbums] = useState<any[]>([]);
@@ -31,6 +37,16 @@ function EditPage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
+  const handleEditorTypeChange = (nextType: "tinymce" | "grapesjs") => {
+    if (nextType === "tinymce" && !tinyContent && grapesContent) {
+      setTinyContent(grapesContent);
+    }
+    if (nextType === "grapesjs" && !grapesContent && tinyContent) {
+      setGrapesContent(tinyContent);
+    }
+    setEditorType(nextType);
+  };
+
   // ✅ Load page data
   useEffect(() => {
     if (!id) return;
@@ -38,12 +54,23 @@ function EditPage() {
     getPageById(Number(id))
       .then((res) => {
         const page = res.data;
+        const hasGrapesFields = Boolean(page.grapes_html || page.grapes_css || page.grapes_js);
+        const isGrapes = page.content_type === "grapes" || hasGrapesFields;
+        const composedContent = isGrapes
+          ? composeContentFromGrapes({
+              grapes_html: page.grapes_html || page.contents || "",
+              grapes_css: page.grapes_css || "",
+              grapes_js: page.grapes_js || "",
+            })
+          : page.contents || "";
 
         setTitle(page.name);
         setLabel(page.label || "");
         setAlbumId(page.album_id ?? ""); // ✅ HERE
         setMenuId(page.menu_id ?? "");
-        setContent(page.contents);
+        setTinyContent(composedContent);
+        setGrapesContent(composedContent);
+        setEditorType(isGrapes ? "grapesjs" : "tinymce");
         setVisibility(page.status === "published");
         setSeoTitle(page.meta_title || "");
         setSeoDescription(page.meta_description || "");
@@ -71,13 +98,23 @@ function EditPage() {
 
     try {
       setLoading(true);
+      const activeContent = editorType === "grapesjs" ? grapesContent : tinyContent;
+      const grapesParts = extractGrapesParts(grapesContent);
+      const isGrapes = editorType === "grapesjs";
+      const hasGrapesData = Boolean(
+        grapesParts.grapes_html?.trim() || grapesParts.grapes_css?.trim() || grapesParts.grapes_js?.trim()
+      );
 
       await updatePage(Number(id), {
         name: title,
         label: label || undefined,
         album_id: albumId, // ✅ ADD
         menu_id: menuId,
-        contents: content,
+        contents: activeContent,
+        content_type: isGrapes ? "grapes" : "tiny",
+        grapes_html: isGrapes || hasGrapesData ? grapesParts.grapes_html : undefined,
+        grapes_css: isGrapes || hasGrapesData ? grapesParts.grapes_css : undefined,
+        grapes_js: isGrapes || hasGrapesData ? grapesParts.grapes_js : undefined,
         status: visibility ? "published" : "private",
         meta_title: seoTitle || undefined,
         meta_description: seoDescription || undefined,
@@ -168,7 +205,8 @@ function EditPage() {
 
             <SelectPreset
               onSelect={(html) => {
-                setContent(html);
+                setTinyContent(html);
+                setGrapesContent(html);
                 toast.success("Layout preset applied");
               }}
             />
@@ -176,16 +214,51 @@ function EditPage() {
 
           <div className="mb-3">
             <label className="form-label">Page Content</label>
+            <div className="d-flex align-items-center gap-3 mb-2">
+              <div className="form-check form-check-inline mb-0">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="editorType"
+                  id="editorTinyMce"
+                  checked={editorType === "tinymce"}
+                  onChange={() => handleEditorTypeChange("tinymce")}
+                />
+                <label className="form-check-label" htmlFor="editorTinyMce">
+                  TinyMCE
+                </label>
+              </div>
+              <div className="form-check form-check-inline mb-0">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="editorType"
+                  id="editorGrapes"
+                  checked={editorType === "grapesjs"}
+                  onChange={() => handleEditorTypeChange("grapesjs")}
+                />
+                <label className="form-check-label" htmlFor="editorGrapes">
+                  GrapesJS
+                </label>
+              </div>
+            </div>
             {/**
             <AiAssistant
               content={content}
               onApply={(html) => setContent(html)}
             />
              */}
-            <TinyEditor
-              value={content}
-              onChange={setContent}
-            />
+            {editorType === "tinymce" ? (
+              <TinyEditor
+                value={tinyContent}
+                onChange={setTinyContent}
+              />
+            ) : (
+              <GrapesEditor
+                value={grapesContent}
+                onChange={setGrapesContent}
+              />
+            )}
           </div>
 
           <div className="form-check form-switch mb-3">
