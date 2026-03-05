@@ -8,6 +8,11 @@ export const login = async (email: string, password: string) => {
 
   // 🔥 SAVE TOKEN
   if (response.data?.token) {
+
+    localStorage.removeItem("cms4.currentUser.v1");
+    localStorage.removeItem("cms4.websiteSettings.v1");
+    localStorage.removeItem("cms4.homeBanner.fonts.v1");
+
     localStorage.setItem("auth_token", response.data.token);
   }
 
