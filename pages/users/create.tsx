@@ -47,7 +47,7 @@ function CreateUser() {
   };
 
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <h3 className="mb-4">Create a User</h3>
 
       <div className="form-group mb-3">

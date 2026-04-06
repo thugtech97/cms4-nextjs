@@ -383,7 +383,7 @@ export default function PublicProductDetail({ product, slugOrId }: Props) {
 
 	if (loading) {
 		return (
-			<div className="container">
+			<div className="container-fluid px-4 pt-3">
 				<div className="p-t-80 p-b-80">
 					<p className="txt14">Loading product…</p>
 				</div>
@@ -393,7 +393,7 @@ export default function PublicProductDetail({ product, slugOrId }: Props) {
 
 	if (!clientProduct) {
 		return (
-			<div className="container">
+			<div className="container-fluid px-4 pt-3">
 				<div className="p-t-80 p-b-80">
 					<p className="txt14">{didTryFetch ? "Product not found." : "Unable to load product."}</p>
 					<a href="/public/products" className="txt4 color0-hov link-reset">← Back to products</a>
@@ -471,7 +471,7 @@ export default function PublicProductDetail({ product, slugOrId }: Props) {
 	};
 
 	return (
-		<div className="container">
+		<div className="container-fluid px-4 pt-3">
 			<div className="p-t-80 p-b-80">
 				<div className="p-b-30">
 					<a href="/public/products" className="txt4 color0-hov" style={{ textDecoration: "none" }}>

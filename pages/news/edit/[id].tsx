@@ -125,14 +125,14 @@ export default function EditNews() {
 
   if (loading) {
     return (
-      <div className="container">
+      <div className="container-fluid px-4 pt-3">
         <p>Loading article...</p>
       </div>
     );
   }
 
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <h3 className="mb-4">Edit News</h3>
 
       {/* ================= News Details ================= */}

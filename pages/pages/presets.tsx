@@ -343,7 +343,7 @@ function PresetPage() {
    UI
   ========================== */
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h3 className="mb-0 d-flex align-items-center gap-2">
           Layout Presets

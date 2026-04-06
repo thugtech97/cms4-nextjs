@@ -14,27 +14,6 @@ type SidebarProps = {
 export default function Sidebar({ isOpen, isMobile, onClose, width }: SidebarProps) {
   const pathname = usePathname();
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
-  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
-
-  const MenuLabel = ({ icon, text }: { icon: string; text: string }) => (
-    <span className="cms-sidebar__label-row">
-      <span className="cms-sidebar__label-left">
-        <span className="cms-sidebar__icon" aria-hidden="true">
-          <i className={icon} />
-        </span>
-        <span className="cms-sidebar__label-text">{text}</span>
-      </span>
-    </span>
-  );
-
-  const toggleMenu = (key: string) => {
-    setOpenMenus((prev) => {
-      const isCurrentlyOpen = prev[key];
-
-      return { [key]: !isCurrentlyOpen };
-    });
-  };
-
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userLoaded, setUserLoaded] = useState(false);
 
@@ -43,7 +22,6 @@ export default function Sidebar({ isOpen, isMobile, onClose, width }: SidebarPro
       const u = await getCurrentUserCached({ force: opts?.force === true });
       setCurrentUser(u);
     } catch {
-      // ignore; keep fallback UI
     } finally {
       setUserLoaded(true);
     }
@@ -53,7 +31,6 @@ export default function Sidebar({ isOpen, isMobile, onClose, width }: SidebarPro
     refreshUser({ force: false });
     const unsub = subscribeCurrentUserUpdated(() => refreshUser({ force: true }));
     return () => unsub();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const userInitials = useMemo(() => initialsForUser(currentUser), [currentUser]);
@@ -62,242 +39,413 @@ export default function Sidebar({ isOpen, isMobile, onClose, width }: SidebarPro
   const isActive = (href: string) => pathname === href;
   const isPathActive = (href: string) => pathname === href || pathname?.startsWith(`${href}/`);
 
+  const toggleMenu = (key: string) => {
+    setOpenMenus((prev) => ({ [key]: !prev[key] }));
+  };
+
   const menuItems = [
+    { label: "Dashboard", icon: "fa-solid fa-house", href: "/dashboard" },
     {
-      label: <MenuLabel icon="fa-solid fa-house" text="Dashboard" />,
-      href: "/dashboard",
-    },
-    {
-      label: <MenuLabel icon="fa-solid fa-file-lines" text="Pages" />,
-      href: "/pages",
+      label: "Pages", icon: "fa-solid fa-file-lines", href: "/pages",
       children: [
         { label: "Manage Pages", href: "/pages" },
         { label: "Create a Page", href: "/pages/create" },
-        { label: "Layout Presets", href: "/pages/presets" }
-      ]
+        { label: "Layout Presets", href: "/pages/presets" },
+      ],
     },
     {
-      label: <MenuLabel icon="fa-solid fa-images" text="Banners" />,
-      href: "/banners",
+      label: "Banners", icon: "fa-solid fa-images", href: "/banners",
       children: [
         { label: "Manage Home Banner", href: "/banners/home" },
         { label: "Manage Subpage Banners", href: "/banners" },
-        { label: "Create an Album", href: "/banners/create"}
-      ]
+        { label: "Create an Album", href: "/banners/create" },
+      ],
     },
-    { label: <MenuLabel icon="fa-solid fa-folder-open" text="Files" />, href: "/files" },
+    { label: "Files", icon: "fa-solid fa-folder-open", href: "/files" },
     {
-      label: <MenuLabel icon="fa-solid fa-bars" text="Menu" />,
-      href: "/menu",
+      label: "Menu", icon: "fa-solid fa-bars", href: "/menu",
       children: [
         { label: "Manage Menu", href: "/menu" },
         { label: "Create a Menu", href: "/menu/create" },
-      ]
+      ],
     },
     {
-      label: <MenuLabel icon="fa-solid fa-newspaper" text="News" />,
-      href: "/news",
+      label: "News", icon: "fa-solid fa-newspaper", href: "/news",
       children: [
         { label: "Manage News", href: "/news" },
         { label: "Create News", href: "/news/create" },
-        { label: "Manage Categories", href: "/news/category_index"},
-        { label: "Create a Category", href: "/news/category_create"}
-      ]
+        { label: "Manage Categories", href: "/news/category_index" },
+        { label: "Create a Category", href: "/news/category_create" },
+      ],
     },
     {
-      label: <MenuLabel icon="fa-solid fa-gear" text="Settings" />,
-      href: "/settings",
+      label: "Settings", icon: "fa-solid fa-gear", href: "/settings",
       children: [
         { label: "Account Settings", href: "/settings/account" },
         { label: "Website Settings", href: "/settings/website" },
-        { label: "Audit Trail", href: "/settings/audit"}
-      ]
+        { label: "Audit Trail", href: "/settings/audit" },
+      ],
     },
     {
-      label: <MenuLabel icon="fa-solid fa-users" text="Users" />,
-      href: "/users",
+      label: "Users", icon: "fa-solid fa-users", href: "/users",
       children: [
         { label: "Manage Users", href: "/users" },
         { label: "Create a User", href: "/users/create" },
-      ]
+      ],
     },
     {
-      label: <MenuLabel icon="fa-solid fa-user-shield" text="Account Management" />,
-      href: "/account-management",
+      label: "Account Management", icon: "fa-solid fa-user-shield", href: "/account-management",
       children: [
         { label: "Roles", href: "/account-management/roles" },
         { label: "Access Rights", href: "/account-management/access_rights" },
-      ]
-    }
-    ,
+      ],
+    },
     {
-      label: <MenuLabel icon="fa-solid fa-boxes-stacked" text="Products" />,
-      href: "/products",
+      label: "Products", icon: "fa-solid fa-boxes-stacked", href: "/products",
       children: [
         { label: "Manage Products", href: "/products" },
         { label: "Create Product", href: "/products/create" },
-        { label: "Create Category", href: "/products/category_create" }
-      ]
-    }
+        { label: "Create Category", href: "/products/category_create" },
+      ],
+    },
   ];
 
   useEffect(() => {
     setOpenMenus((prev) => {
       const next = { ...prev };
       menuItems.forEach((item: any) => {
-        if (item.children && item.children.some((child: any) => isPathActive(child.href))) {
+        if (item.children?.some((child: any) => isPathActive(child.href))) {
           next[item.href] = true;
         }
       });
       return next;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
+  const sidebarWidth = width != null
+    ? (typeof width === "number" ? `${width}px` : width)
+    : "260px";
+
   return (
-    <aside
-      className={`cms-sidebar d-flex flex-column flex-shrink-0 p-3 ${
-        isOpen ? "cms-sidebar--open" : ""
-      }`}
-      style={
-        width != null
-          ? ({
-              ["--cms-sidebar-width" as any]:
-                typeof width === "number" ? `${width}px` : width,
-            } as React.CSSProperties)
-          : undefined
-      }
-      aria-hidden={isMobile && isOpen === false ? true : undefined}
-    >
-      <div className="position-relative mb-4 text-center">
-        <h1 className="cms-sidebar__brand fs-4 fw-bold m-0">Admin Portal</h1>
+    <>
+      <style>{`
+        .sb-root {
+          width: ${sidebarWidth};
+          min-width: ${sidebarWidth};
+          height: 100vh;
+          display: flex;
+          flex-direction: column;
+          background: linear-gradient(180deg, #0d1117 0%, #0f172a 55%, #0a0f1e 100%);
+          border-right: 1px solid rgba(255,255,255,0.06);
+          overflow-y: auto;
+          overflow-x: hidden;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255,255,255,0.08) transparent;
+          transition: transform 0.25s ease;
+          flex-shrink: 0;
+          position: relative;
+          z-index: 100;
+        }
+        .sb-root.sb-mobile-closed {
+          transform: translateX(-100%);
+          position: fixed;
+          left: 0; top: 0; bottom: 0;
+        }
+        .sb-root.sb-mobile-open {
+          transform: translateX(0);
+          position: fixed;
+          left: 0; top: 0; bottom: 0;
+        }
+        @media (min-width: 992px) {
+          .sb-root { transform: none !important; position: relative !important; }
+        }
+        .sb-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 20px 18px 16px;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          flex-shrink: 0;
+        }
+        .sb-brand {
+          font-size: 15px;
+          font-weight: 700;
+          color: #f8fafc;
+          letter-spacing: 0.2px;
+        }
+        .sb-close-btn {
+          background: rgba(255,255,255,0.07);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: rgba(148,163,184,0.9);
+          border-radius: 6px;
+          width: 28px; height: 28px;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          font-size: 12px;
+          transition: background 0.15s;
+        }
+        .sb-close-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+        .sb-user {
+          display: flex;
+          align-items: center;
+          gap: 11px;
+          padding: 16px 18px;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          flex-shrink: 0;
+        }
+        .sb-avatar {
+          width: 38px; height: 38px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #2563eb, #1e40af);
+          border: 2px solid rgba(59,130,246,0.35);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 12px; font-weight: 700; color: #fff;
+          flex-shrink: 0; overflow: hidden;
+        }
+        .sb-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .sb-username {
+          font-size: 13px; font-weight: 600;
+          color: #f1f5f9; line-height: 1.3;
+        }
+        .sb-role {
+          font-size: 11px;
+          color: rgba(100,116,139,0.9);
+          margin-top: 2px;
+        }
+        .sb-viewsite {
+          padding: 11px 18px;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          flex-shrink: 0;
+        }
+        .sb-viewsite a {
+          display: flex; align-items: center; gap: 8px;
+          font-size: 12.5px; color: rgba(148,163,184,0.8);
+          text-decoration: none; font-weight: 500;
+          transition: color 0.15s;
+        }
+        .sb-viewsite a:hover { color: #e2e8f0; }
+        .sb-viewsite-dot {
+          width: 7px; height: 7px; border-radius: 50%;
+          background: #22c55e;
+          box-shadow: 0 0 6px rgba(34,197,94,0.5);
+          flex-shrink: 0;
+        }
+        .sb-section-label {
+          padding: 16px 18px 6px;
+          font-size: 10px; font-weight: 700;
+          letter-spacing: 1.1px;
+          color: rgba(71,85,105,0.9);
+          text-transform: uppercase;
+          flex-shrink: 0;
+        }
+        .sb-nav {
+          flex: 1;
+          padding: 2px 10px 12px;
+          overflow-y: visible;
+        }
+        .sb-parent-btn {
+          width: 100%;
+          display: flex; align-items: center; gap: 10px;
+          padding: 8px 10px;
+          border-radius: 8px;
+          border: 1px solid transparent;
+          background: transparent;
+          cursor: pointer;
+          text-align: left;
+          transition: background 0.15s, border-color 0.15s;
+          margin-bottom: 1px;
+          color: rgba(203,213,225,0.85);
+        }
+        .sb-parent-btn:hover {
+          background: rgba(255,255,255,0.05);
+          color: #e2e8f0;
+        }
+        .sb-parent-btn.sb-active {
+          background: rgba(59,130,246,0.14);
+          border-color: rgba(59,130,246,0.22);
+          color: #93c5fd;
+        }
+        .sb-parent-btn.sb-active .sb-nav-icon { color: #60a5fa; }
+        .sb-single-link {
+          display: flex; align-items: center; gap: 10px;
+          padding: 8px 10px;
+          border-radius: 8px;
+          border: 1px solid transparent;
+          text-decoration: none;
+          color: rgba(203,213,225,0.85);
+          transition: background 0.15s, border-color 0.15s;
+          margin-bottom: 1px;
+          font-size: 13px;
+        }
+        .sb-single-link:hover {
+          background: rgba(255,255,255,0.05);
+          color: #e2e8f0;
+        }
+        .sb-single-link.sb-active {
+          background: rgba(59,130,246,0.14);
+          border-color: rgba(59,130,246,0.22);
+          color: #93c5fd;
+        }
+        .sb-single-link.sb-active .sb-nav-icon { color: #60a5fa; }
+        .sb-nav-icon {
+          font-size: 13px;
+          color: rgba(100,116,139,0.8);
+          width: 17px; text-align: center; flex-shrink: 0;
+          transition: color 0.15s;
+        }
+        .sb-nav-label { font-size: 13px; flex: 1; font-weight: 500; }
+        .sb-chevron {
+          font-size: 9px;
+          color: rgba(71,85,105,0.8);
+          transition: transform 0.2s ease;
+          flex-shrink: 0;
+        }
+        .sb-chevron.open { transform: rotate(180deg); }
+        .sb-submenu {
+          margin: 2px 0 4px 17px;
+          padding-left: 12px;
+          border-left: 1px solid rgba(255,255,255,0.07);
+        }
+        .sb-child-link {
+          display: flex; align-items: center;
+          padding: 5px 8px;
+          border-radius: 6px;
+          text-decoration: none;
+          color: rgba(148,163,184,0.75);
+          font-size: 12px;
+          transition: background 0.12s, color 0.12s;
+          margin-bottom: 1px;
+          gap: 7px;
+        }
+        .sb-child-link:hover {
+          background: rgba(255,255,255,0.04);
+          color: #cbd5e1;
+        }
+        .sb-child-link.sb-active {
+          color: #93c5fd;
+          background: rgba(59,130,246,0.1);
+        }
+        .sb-child-dot {
+          width: 4px; height: 4px; border-radius: 50%;
+          background: currentColor; opacity: 0.5; flex-shrink: 0;
+        }
+        .sb-child-link.sb-active .sb-child-dot { opacity: 1; }
+        .sb-footer {
+          padding: 14px 18px;
+          border-top: 1px solid rgba(255,255,255,0.06);
+          font-size: 11px;
+          color: rgba(71,85,105,0.7);
+          flex-shrink: 0;
+        }
+      `}</style>
 
-        <button
-          type="button"
-          className="btn btn-sm btn-outline-light d-lg-none position-absolute end-0 top-50 translate-middle-y"
-          onClick={onClose}
-          aria-label="Close sidebar"
-        >
-          <i className="fa-solid fa-xmark" />
-        </button>
-      </div>
-
-      <div className="cms-sidebar__user d-flex flex-column align-items-center text-center mb-4">
-        <div
-          className="rounded-circle d-flex align-items-center justify-content-center"
-          style={{ width: "72px", height: "72px", overflow: "hidden", background: "rgba(255,255,255,0.08)" }}
-          aria-label="User avatar"
-        >
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          ) : (
-            <span style={{ fontWeight: 800, fontSize: "1.35rem", letterSpacing: 0.5 }}>{userInitials}</span>
-          )}
+      <aside
+        className={[
+          "sb-root",
+          isMobile ? (isOpen ? "sb-mobile-open" : "sb-mobile-closed") : "",
+        ].join(" ")}
+        aria-hidden={isMobile && !isOpen ? true : undefined}
+      >
+        {/* Header */}
+        <div className="sb-header">
+          <span className="sb-brand">Admin Portal</span>
+          <button
+            type="button"
+            className="sb-close-btn d-lg-none"
+            onClick={onClose}
+            aria-label="Close sidebar"
+          >
+            <i className="fa-solid fa-xmark" />
+          </button>
         </div>
 
-        <div className="mt-2">
-          <div className="fw-bold" style={{ fontSize: "1.05rem", lineHeight: 1.15 }}>
-            {currentUser ? `${currentUser.fname} ${currentUser.lname}`.trim() : userLoaded ? "User" : "Loading..."}
+        {/* User */}
+        <div className="sb-user">
+          <div className="sb-avatar">
+            {avatarUrl
+              ? <img src={avatarUrl} alt="Avatar" />
+              : <span>{userInitials}</span>
+            }
           </div>
-          <div className="text-white" style={{ fontSize: "0.9rem" }}>
-            Admin
+          <div>
+            <div className="sb-username">
+              {currentUser
+                ? `${currentUser.fname} ${currentUser.lname}`.trim()
+                : userLoaded ? "User" : "Loading..."}
+            </div>
+            <div className="sb-role">Admin</div>
           </div>
         </div>
-      </div>
 
-      <div className="mb-4">
-        <Link
-          href="/public/home"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="nav-link text-white p-0 text-decoration-none d-flex align-items-center justify-content-center gap-2 fw-semibold"
-          style={{ fontSize: "1rem" }}
-        >
-          <span className="cms-sidebar__icon" aria-hidden="true">
-            <i className="fa-solid fa-globe" style={{ fontSize: "1.05rem" }} />
-          </span>
-          <span>View Website</span>
-        </Link>
-      </div>
+        {/* View Website */}
+        <div className="sb-viewsite">
+          <Link href="/public/home" target="_blank" rel="noopener noreferrer">
+            <span className="sb-viewsite-dot" />
+            View Website
+          </Link>
+        </div>
 
-      <div className="mb-3 text-uppercase text-white small fw-bold">
-        CMS
-      </div>
+        {/* Section label */}
+        <div className="sb-section-label">CMS</div>
 
-      <nav className="cms-sidebar__nav nav nav-pills flex-column mb-auto">
-        {menuItems.map((item: any, index) => (
-          <div key={index}>
+        {/* Nav */}
+        <nav className="sb-nav">
+          {menuItems.map((item: any, index) => {
+            const hasChildren = Boolean(item.children);
+            const childActive = hasChildren && item.children.some((c: any) => isPathActive(c.href));
+            const parentActive = isPathActive(item.href);
+            const isExpanded = !!openMenus[item.href];
+            const highlightParent = parentActive || childActive || isExpanded;
 
-            {"children" in item ? (
-              <>
-                {(() => {
-                  const childActive = item.children.some((child: any) => isPathActive(child.href));
-                  const parentActive = isPathActive(item.href);
-                  const shouldHighlightParent = parentActive || childActive || !!openMenus[item.href];
-                  return (
-                <button
-                  onClick={() => toggleMenu(item.href)}
-                  onMouseEnter={() => setHoveredKey(`parent:${item.href}`)}
-                  onMouseLeave={() => setHoveredKey((prev) => (prev === `parent:${item.href}` ? null : prev))}
-                  className={`cms-sidebar__button nav-link text-white mb-2 rounded w-100 text-start border-0 ${
-                    shouldHighlightParent ? "active" : ""
-                  } ${hoveredKey === `parent:${item.href}` ? "cms-sidebar__hover" : ""}`}
+            if (!hasChildren) {
+              return (
+                <Link
+                  key={index}
+                  href={item.href}
+                  onClick={onClose}
+                  className={`sb-single-link${isActive(item.href) ? " sb-active" : ""}`}
                 >
-                  <span className="cms-sidebar__item-row d-flex align-items-center justify-content-between">
-                    <span className="cms-sidebar__item-label">{item.label}</span>
-                    <i
-                      className={`cms-sidebar__chevron fa-solid fa-chevron-down ms-2 ${
-                        openMenus[item.href] ? "fa-rotate-180" : ""
-                      }`}
-                      style={{ fontSize: "0.75rem", opacity: 0.85 }}
-                    />
-                  </span>
-                </button>
-                  );
-                })()}
+                  <i className={`${item.icon} sb-nav-icon`} />
+                  <span className="sb-nav-label">{item.label}</span>
+                </Link>
+              );
+            }
 
-                {openMenus[item.href] && (
-                  <div className="cms-sidebar__submenu ms-3 ps-2">
+            return (
+              <div key={index}>
+                <button
+                  type="button"
+                  className={`sb-parent-btn${highlightParent ? " sb-active" : ""}`}
+                  onClick={() => toggleMenu(item.href)}
+                >
+                  <i className={`${item.icon} sb-nav-icon`} />
+                  <span className="sb-nav-label">{item.label}</span>
+                  <i className={`fa-solid fa-chevron-down sb-chevron${isExpanded ? " open" : ""}`} />
+                </button>
+
+                {isExpanded && (
+                  <div className="sb-submenu">
                     {item.children.map((child: any) => (
                       <Link
                         key={child.href}
                         href={child.href}
                         onClick={onClose}
-                        onMouseEnter={() => setHoveredKey(`child:${child.href}`)}
-                        onMouseLeave={() => setHoveredKey((prev) => (prev === `child:${child.href}` ? null : prev))}
-                        className={`cms-sidebar__link nav-link text-white mb-1 ${
-                          isActive(child.href) ? "active" : ""
-                        } ${hoveredKey === `child:${child.href}` ? "cms-sidebar__hover" : ""}`}
-                        style={{ fontSize: "12px" }}
+                        className={`sb-child-link${isActive(child.href) ? " sb-active" : ""}`}
                       >
-                        <span className="cms-sidebar__child">{child.label}</span>
+                        <span className="sb-child-dot" />
+                        {child.label}
                       </Link>
                     ))}
                   </div>
                 )}
-              </>
-            ) : (
+              </div>
+            );
+          })}
+        </nav>
 
-              <Link
-                href={item.href}
-                onClick={onClose}
-                onMouseEnter={() => setHoveredKey(`single:${item.href}`)}
-                onMouseLeave={() => setHoveredKey((prev) => (prev === `single:${item.href}` ? null : prev))}
-                className={`cms-sidebar__link nav-link text-white mb-2 rounded ${
-                  isActive(item.href) ? "active" : ""
-                } ${hoveredKey === `single:${item.href}` ? "cms-sidebar__hover" : ""}`}
-              >
-                {item.label}
-              </Link>
-            )}
-          </div>
-        ))}
-      </nav>
-
-      {/* FOOTER */}
-      <div className="mt-auto text-white pt-3 small">
-        © {new Date().getFullYear()}
-      </div>
-    </aside>
+        {/* Footer */}
+        <div className="sb-footer">© {new Date().getFullYear()}</div>
+      </aside>
+    </>
   );
 }

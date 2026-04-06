@@ -596,7 +596,7 @@ function EditAlbum() {
   };
 
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <h3 className="mb-4 d-flex align-items-center gap-2">
         Edit Album
         <Tooltip text="Modify banner images, text overlays, fonts, and animations for this banner album." />

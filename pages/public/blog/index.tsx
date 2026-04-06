@@ -39,7 +39,7 @@ export default function BlogPage({ posts, currentPage, totalPages, viewMode: ini
   };
 
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <div className="row">
 
         {/* MAIN CONTENT */}

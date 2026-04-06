@@ -29,7 +29,7 @@ function ViewUser() {
   };
 
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h3 className="mb-0">View User</h3>
         <div className="d-flex gap-2">

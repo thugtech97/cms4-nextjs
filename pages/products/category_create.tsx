@@ -373,7 +373,7 @@ export default function CreateProductCategory() {
   };
 
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <h3 className="mb-4">Create Product Category</h3>
 
       <div className="card">

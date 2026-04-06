@@ -7,58 +7,38 @@ export interface Column<T> {
   key: string;
   header: ReactNode;
   render?: (row: T) => ReactNode;
-
-  // Optional per-column styling
   thClassName?: string;
   tdClassName?: string;
-
-  // Optional per-column sizing/styling
   width?: number | string;
   minWidth?: number | string;
   maxWidth?: number | string;
   thStyle?: CSSProperties;
   tdStyle?: CSSProperties;
-
-  // Optional: enable click-to-sort header UI
   sortable?: boolean;
-  sortField?: string; // defaults to `key`
-  sortLabel?: string; // used for aria-label/tooltip when header isn't plain text
-  defaultSortOrder?: SortOrder; // defaults to 'asc'
+  sortField?: string;
+  sortLabel?: string;
+  defaultSortOrder?: SortOrder;
 }
 
 interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   loading?: boolean;
-
-  // Optional styling hooks
   wrapperClassName?: string;
   wrapperStyle?: CSSProperties;
   tableClassName?: string;
   tableStyle?: CSSProperties;
-
-  // Layout helpers
   fixedLayout?: boolean;
   stickyHeader?: boolean;
-
-  // Server-side pagination (optional)
   currentPage?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
-
-  // Client-side pagination fallback
   itemsPerPage?: number;
-  // Optional callback when items per page changes (useful for server pagination)
   onItemsPerPageChange?: (n: number) => void;
-
-  // Optional sorting (controlled if onSortChange provided, else internal)
   sortBy?: string;
   sortOrder?: SortOrder;
   onSortChange?: (sortBy: string, sortOrder: SortOrder) => void;
-  // Optional actions area to render above the table (e.g. buttons/dropdowns)
   actions?: ReactNode;
-
-  // Where to render the entries-per-page control. Defaults to 'bottom'.
   entriesPlacement?: "bottom" | "top" | "none";
 }
 
@@ -88,11 +68,7 @@ export default function DataTable<T>({
     typeof totalPages === "number" &&
     typeof onPageChange === "function";
 
-  const sortableColumns = useMemo(
-    () => columns.filter((c) => c.sortable),
-    [columns]
-  );
-
+  const sortableColumns = useMemo(() => columns.filter((c) => c.sortable), [columns]);
   const firstSortableField = sortableColumns[0]?.sortField ?? sortableColumns[0]?.key;
   const [localSortBy, setLocalSortBy] = useState<string | undefined>(firstSortableField);
   const [localSortOrder, setLocalSortOrder] = useState<SortOrder>("asc");
@@ -101,10 +77,7 @@ export default function DataTable<T>({
   const effectiveSortOrder: SortOrder = onSortChange ? (sortOrder ?? "asc") : (sortOrder ?? localSortOrder);
 
   const applySortChange = (nextBy: string, nextOrder: SortOrder) => {
-    if (onSortChange) {
-      onSortChange(nextBy, nextOrder);
-      return;
-    }
+    if (onSortChange) { onSortChange(nextBy, nextOrder); return; }
     setLocalSortBy(nextBy);
     setLocalSortOrder(nextOrder);
   };
@@ -120,48 +93,38 @@ export default function DataTable<T>({
     const label = getHeaderLabel(col);
     const active = (effectiveSortBy ?? "") === field;
     const order = active ? effectiveSortOrder : undefined;
-    const iconClass = !active
-      ? "fas fa-sort text-muted"
-      : order === "asc"
-        ? "fas fa-sort-up"
-        : "fas fa-sort-down";
-
+    const iconClass = !active ? "fas fa-sort" : order === "asc" ? "fas fa-sort-up" : "fas fa-sort-down";
     const defaultOrder: SortOrder = col.defaultSortOrder ?? "asc";
 
     return (
       <button
         type="button"
-        className="btn btn-link p-0 text-decoration-none d-inline-flex align-items-center gap-1"
-        style={{ color: "inherit", fontWeight: 600 }}
         onClick={() => {
-          if (active) {
-            applySortChange(field, effectiveSortOrder === "asc" ? "desc" : "asc");
-            return;
-          }
+          if (active) { applySortChange(field, effectiveSortOrder === "asc" ? "desc" : "asc"); return; }
           applySortChange(field, defaultOrder);
         }}
         aria-label={`Sort by ${label}`}
         title={`Sort by ${label}`}
+        style={{
+          background: "none", border: "none", padding: 0, cursor: "pointer",
+          display: "inline-flex", alignItems: "center", gap: 6,
+          color: "inherit", fontWeight: 700, fontSize: "inherit",
+        }}
       >
         <span>{col.header}</span>
-        <i className={iconClass} />
+        <i className={iconClass} style={{ fontSize: 10, opacity: active ? 1 : 0.4 }} />
       </button>
     );
   };
 
   const sortedData = useMemo(() => {
-    // If parent is handling sort (server-side or pre-sorted), don't re-sort.
     if (onSortChange) return data;
-
     if (!effectiveSortBy) return data;
     const col = columns.find((c) => (c.sortField ?? c.key) === effectiveSortBy);
     if (!col || !col.sortable) return data;
-
     const direction = effectiveSortOrder === "asc" ? 1 : -1;
     const field = effectiveSortBy;
-
     const valueOf = (row: any) => row?.[field];
-
     const toComparable = (v: any) => {
       if (v == null) return "";
       if (typeof v === "number") return v;
@@ -171,31 +134,24 @@ export default function DataTable<T>({
       if (Number.isFinite(ms)) return ms;
       return asString.toLowerCase();
     };
-
     return data
       .map((row, idx) => ({ row, idx }))
       .sort((a, b) => {
         const av = toComparable(valueOf(a.row));
         const bv = toComparable(valueOf(b.row));
-
         let cmp = 0;
         if (typeof av === "number" && typeof bv === "number") cmp = av - bv;
         else cmp = String(av).localeCompare(String(bv));
-
         if (cmp === 0) cmp = a.idx - b.idx;
         return cmp * direction;
       })
       .map((x) => x.row);
   }, [columns, data, effectiveSortBy, effectiveSortOrder, onSortChange]);
 
-  // Client-side pagination state (when not server-paginated)
   const [clientPage, setClientPage] = useState(1);
   const [selectedItemsPerPage, setSelectedItemsPerPage] = useState(itemsPerPage);
 
-  // keep selectedItemsPerPage in sync when prop changes
-  useEffect(() => {
-    setSelectedItemsPerPage(itemsPerPage);
-  }, [itemsPerPage]);
+  useEffect(() => { setSelectedItemsPerPage(itemsPerPage); }, [itemsPerPage]);
 
   const effectiveCurrentPage = isServerPaginated ? (currentPage || 1) : clientPage;
   const effectiveTotalPages = isServerPaginated
@@ -219,54 +175,109 @@ export default function DataTable<T>({
 
   const safeTotal = Math.max(1, effectiveTotalPages);
   const safeCurrent = Math.min(Math.max(1, effectiveCurrentPage), safeTotal);
-
   const entriesOptions = [5, 10, 25, 50, 100];
+  const showBottomEntries = entriesPlacement === "bottom" && (!isServerPaginated || typeof onItemsPerPageChange === "function");
+  const shouldRenderPaginationBlock = showBottomEntries || effectiveTotalPages > 1;
 
-  const renderEntriesControl = (
-    <div className="d-flex align-items-center gap-2">
-      <label className="small mb-0">Show</label>
+  const entriesControl = (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <label style={{ fontSize: 13, color: "#64748b", marginBottom: 0 }}>Show</label>
       <select
-        className="form-select form-select-sm"
-        style={{ width: 96 }}
         value={selectedItemsPerPage}
         onChange={(e) => {
           const v = Number(e.target.value) || 10;
           setSelectedItemsPerPage(v);
           if (!isServerPaginated) setClientPage(1);
-          if (isServerPaginated && typeof onItemsPerPageChange === "function") {
-            onItemsPerPageChange(v);
-          }
+          if (isServerPaginated && typeof onItemsPerPageChange === "function") onItemsPerPageChange(v);
+        }}
+        style={{
+          border: "1px solid #e2e8f0", borderRadius: 7, padding: "4px 10px",
+          fontSize: 13, color: "#374151", background: "#fff",
+          cursor: "pointer", outline: "none",
         }}
       >
-        {entriesOptions.map((o) => (
-          <option key={o} value={o}>{o}</option>
-        ))}
+        {entriesOptions.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
-      <span className="small text-muted">entries</span>
+      <span style={{ fontSize: 13, color: "#94a3b8" }}>entries</span>
     </div>
   );
 
-  const showBottomEntries = entriesPlacement === "bottom" && (!isServerPaginated || typeof onItemsPerPageChange === "function");
-
-  const shouldRenderPaginationBlock = showBottomEntries || effectiveTotalPages > 1;
+  // Shared cell/header padding
+  const thPad: CSSProperties = { padding: "11px 14px" };
+  const tdPad: CSSProperties = { padding: "12px 14px" };
 
   return (
-    <div>
+    <>
+      <style>{`
+        .dt-enhanced-table { border-collapse: collapse; width: 100%; }
+        .dt-enhanced-table thead th {
+          background: #f8fafc;
+          color: #64748b;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          border-bottom: 1px solid #e2e8f0;
+          border-right: 1px solid #f1f5f9;
+          white-space: nowrap;
+          position: relative;
+        }
+        .dt-enhanced-table thead th:last-child { border-right: none; }
+        .dt-enhanced-table tbody tr {
+          border-bottom: 1px solid #f1f5f9;
+          transition: background 0.12s;
+        }
+        .dt-enhanced-table tbody tr:last-child { border-bottom: none; }
+        .dt-enhanced-table tbody tr:hover { background: #f8fafc; }
+        .dt-enhanced-table tbody td {
+          color: #374151;
+          font-size: 13.5px;
+          border-right: 1px solid #f8fafc;
+          vertical-align: middle;
+        }
+        .dt-enhanced-table tbody td:last-child { border-right: none; }
+        .dt-pg-btn {
+          height: 32px; min-width: 32px; padding: 0 12px;
+          border-radius: 7px; border: 1px solid #e2e8f0;
+          background: #fff; font-size: 13px; color: #374151;
+          cursor: pointer; display: inline-flex; align-items: center;
+          justify-content: center; transition: background 0.12s, border-color 0.12s;
+          font-family: inherit;
+        }
+        .dt-pg-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+        .dt-pg-btn:disabled { color: #cbd5e1; cursor: default; background: #fafafa; }
+        .dt-pg-info {
+          height: 32px; padding: 0 14px;
+          border-radius: 7px; background: #f1f5f9;
+          font-size: 13px; color: #64748b;
+          display: inline-flex; align-items: center;
+          border: 1px solid #e8edf3;
+        }
+      `}</style>
+
       {(entriesPlacement === "top" || actions) && (
-        <div className="d-flex align-items-center justify-content-between mb-2">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <div>{actions}</div>
-          <div>{entriesPlacement === "top" ? renderEntriesControl : null}</div>
+          <div>{entriesPlacement === "top" ? entriesControl : null}</div>
         </div>
       )}
-      {/* TABLE */}
+
+      {/* Table wrapper */}
       <div
-        className={wrapperClassName ?? "table-responsive"}
-        style={wrapperStyle}
+        className={wrapperClassName}
+        style={{
+          background: "#fff",
+          borderRadius: 12,
+          border: "1px solid #e8edf3",
+          overflow: "hidden",
+          ...(!wrapperClassName ? { overflowX: "auto" } : {}),
+          ...wrapperStyle,
+        }}
       >
         <table
-          className={`table table-bordered table-hover mb-3 ${tableClassName ?? ""}`.trim()}
+          className={`dt-enhanced-table${tableClassName ? ` ${tableClassName}` : ""}`}
           style={{
-            ...(fixedLayout ? { tableLayout: "fixed" } : null),
+            ...(fixedLayout ? { tableLayout: "fixed" } : {}),
             ...tableStyle,
           }}
         >
@@ -277,14 +288,11 @@ export default function DataTable<T>({
                   key={col.key}
                   className={col.thClassName}
                   style={{
-                    fontWeight: 600,
-                    backgroundColor: "#f5f7fb",
-                    ...(stickyHeader
-                      ? { position: "sticky", top: 0, zIndex: 2 }
-                      : null),
-                    ...(col.width != null ? { width: col.width } : null),
-                    ...(col.minWidth != null ? { minWidth: col.minWidth } : null),
-                    ...(col.maxWidth != null ? { maxWidth: col.maxWidth } : null),
+                    ...thPad,
+                    ...(stickyHeader ? { position: "sticky", top: 0, zIndex: 2 } : {}),
+                    ...(col.width != null ? { width: col.width } : {}),
+                    ...(col.minWidth != null ? { minWidth: col.minWidth } : {}),
+                    ...(col.maxWidth != null ? { maxWidth: col.maxWidth } : {}),
                     ...col.thStyle,
                   }}
                 >
@@ -297,81 +305,72 @@ export default function DataTable<T>({
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={columns.length} className="text-center py-4">
-                  Loading...
+                <td colSpan={columns.length} style={{ ...tdPad, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
+                  <span style={{ opacity: 0.7 }}>Loading...</span>
                 </td>
               </tr>
             )}
 
             {!loading && pageData.length === 0 && (
               <tr>
-                <td colSpan={columns.length} className="text-center py-4">
+                <td colSpan={columns.length} style={{ ...tdPad, textAlign: "center", color: "#94a3b8", fontSize: 13, padding: "40px 14px" }}>
                   No records found.
                 </td>
               </tr>
             )}
 
-            {!loading &&
-              pageData.map((row, rowIndex) => (
-                <tr key={rowIndex}>
-                  {columns.map((col) => (
-                    <td
-                      key={col.key}
-                      className={col.tdClassName}
-                      style={{
-                        ...(col.width != null ? { width: col.width } : null),
-                        ...(col.minWidth != null ? { minWidth: col.minWidth } : null),
-                        ...(col.maxWidth != null ? { maxWidth: col.maxWidth } : null),
-                        ...col.tdStyle,
-                      }}
-                    >
-                      {col.render ? col.render(row) : (row as any)[col.key]}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+            {!loading && pageData.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                {columns.map((col) => (
+                  <td
+                    key={col.key}
+                    className={col.tdClassName}
+                    style={{
+                      ...tdPad,
+                      ...(col.width != null ? { width: col.width } : {}),
+                      ...(col.minWidth != null ? { minWidth: col.minWidth } : {}),
+                      ...(col.maxWidth != null ? { maxWidth: col.maxWidth } : {}),
+                      ...col.tdStyle,
+                    }}
+                  >
+                    {col.render ? col.render(row) : (row as any)[col.key]}
+                  </td>
+                ))}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
-      {/* PAGINATION & ENTRIES */}
+      {/* Footer: entries + pagination */}
       {shouldRenderPaginationBlock && (
-        <div className="d-flex align-items-center justify-content-between">
-          <div className="d-flex align-items-center gap-2">
-            {showBottomEntries && renderEntriesControl}
-          </div>
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "12px 4px 4px",
+        }}>
+          <div>{showBottomEntries && entriesControl}</div>
 
-          <nav>
-            <ul className="pagination justify-content-end mb-0">
-            <li className={`page-item ${safeCurrent <= 1 ? "disabled" : ""}`}>
+          <nav aria-label="Pagination">
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <button
-                className="page-link"
+                className="dt-pg-btn"
                 onClick={() => handlePageChange(safeCurrent - 1)}
                 disabled={safeCurrent <= 1}
               >
                 Prev
               </button>
-            </li>
-
-            <li className="page-item disabled">
-              <span className="page-link">
-                {safeCurrent} / {safeTotal}
-              </span>
-            </li>
-
-            <li className={`page-item ${safeCurrent >= safeTotal ? "disabled" : ""}`}>
+              <span className="dt-pg-info">{safeCurrent} / {safeTotal}</span>
               <button
-                className="page-link"
+                className="dt-pg-btn"
                 onClick={() => handlePageChange(safeCurrent + 1)}
                 disabled={safeCurrent >= safeTotal}
               >
                 Next
               </button>
-            </li>
-          </ul>
-        </nav>
+            </div>
+          </nav>
         </div>
       )}
-    </div>
+    </>
   );
 }

@@ -89,7 +89,7 @@ export default function Topbar({ onToggleSidebar, sidebarToggleRef }: TopbarProp
 
   return (
     <>
-      <nav className="navbar navbar-light bg-white shadow-sm px-4" style={{ height: '64px' }}>
+      <nav className="navbar navbar-light bg-white shadow-sm px-4" style={{ minHeight: '56px', padding: '0 1.5rem' }}>
         <div className="container-fluid w-100 flex-grow-1 d-flex justify-content-between align-items-center gap-2">
         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
           {logoUrl && !logoFailed ? (

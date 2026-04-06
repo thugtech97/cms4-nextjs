@@ -173,7 +173,7 @@ export default function EditProduct() {
   };
 
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3>Edit Product</h3>
         <div>

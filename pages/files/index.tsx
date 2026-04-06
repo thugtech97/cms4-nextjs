@@ -3,7 +3,7 @@ import FileManagerUI from '@/components/UI/FileManager'
 
 export default function FileManagerPage() {
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <h3 className="mb-3">File Manager</h3>
       <div
         style={{

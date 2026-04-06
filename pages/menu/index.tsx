@@ -442,7 +442,7 @@ function ManageMenus() {
   ];
 
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <h3 className="mb-3">Manage Menus</h3>
 
       <SearchBar

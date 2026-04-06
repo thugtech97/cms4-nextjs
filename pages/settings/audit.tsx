@@ -183,7 +183,7 @@ function AuditTrailsPage() {
    * UI
    * ====================== */
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <h3 className="mb-3">Audit Trail</h3>
 
       <div className="row g-2 align-items-center mb-3">

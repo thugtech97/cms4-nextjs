@@ -110,7 +110,7 @@ function CreateAlbum() {
    * UI
    * ====================== */
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <h3 className="mb-4 d-flex align-items-center gap-2">
         Create an Album
         <Tooltip text="Create a new banner album containing multiple images that rotate as a slideshow." />

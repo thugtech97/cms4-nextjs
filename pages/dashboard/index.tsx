@@ -62,7 +62,7 @@ export default function DashboardIndex() {
   }, [loading, stats.pages, stats.albums, stats.news]);
 
   return (
-    <div className="cms-dashboard container-xxl py-2 py-md-3">
+    <div className="container-fluid px-4 pt-3">
       <div className="cms-dashboard__header mb-2">
         <div className="d-flex flex-column flex-lg-row gap-3 align-items-lg-center justify-content-between">
           <div>

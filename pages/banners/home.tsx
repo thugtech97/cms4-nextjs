@@ -1020,7 +1020,7 @@ function HomeBanner() {
   const selectedBanner = resizeIndex !== null && banners[resizeIndex] ? banners[resizeIndex] : null;
 
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <h3 className="mb-4 d-flex align-items-center gap-2">
         Edit Home Banner
         <Tooltip text="Manage homepage banner images, text overlays, animations, and ordering." />

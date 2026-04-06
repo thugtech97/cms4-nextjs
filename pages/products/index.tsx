@@ -244,7 +244,7 @@ export default function ManageProducts() {
 
   return (
     <>
-      <div className="container">
+      <div className="container-fluid px-4 pt-3">
         <h3 className="mb-3">Manage Products</h3>
         {/* bulk Actions: show when rows selected - moved below SearchBar to align with Filters/PageSize */}
         <SearchBar

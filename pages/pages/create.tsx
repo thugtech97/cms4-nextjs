@@ -125,7 +125,7 @@ export default function CreatePage() {
   }, []);
 
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <h3 className="mb-4">Create a Page</h3>
 
       <div className="card mb-4">

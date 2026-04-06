@@ -151,7 +151,7 @@ export default function CreateProduct() {
   }, []);
 
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <h3 className="mb-4">Create Product</h3>
 
       <div className="card">

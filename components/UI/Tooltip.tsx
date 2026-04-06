@@ -41,7 +41,7 @@ export default function Tooltip({ text, children }: TooltipProps) {
           opacity: 0;
           pointer-events: none;
           transition: opacity 0.2s ease;
-          z-index: 999;
+          z-index: 9999;
         }
 
         .tooltip-wrapper:hover .tooltip-box {

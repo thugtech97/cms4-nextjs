@@ -20,7 +20,7 @@ export default function NewsDetailPage({ article }: Props) {
         />
       </Head>
 
-      <div className="container">
+      <div className="container-fluid px-4 pt-3">
         {/* TITLE */}
         <h1 className="fw-bold text-primary mb-2">
           {article.name}

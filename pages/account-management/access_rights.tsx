@@ -50,7 +50,7 @@ function ManageAccessRights() {
   }
 
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3>Manage Access Rights</h3>
         <button className="btn btn-primary" onClick={saveChanges}>

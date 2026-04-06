@@ -69,7 +69,7 @@ function EditNewsCategory() {
    * UI
    * ====================== */
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <h3 className="mb-4">Edit News Category</h3>
 
       {loading ? (

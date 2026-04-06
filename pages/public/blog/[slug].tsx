@@ -18,7 +18,7 @@ export default function BlogDetailPage({ post }: Props) {
   }
 
   return (
-    <div className="container">
+    <div className="container-fluid px-4 pt-3">
       <div className="row">
 
         {/* MAIN CONTENT */}
