@@ -144,7 +144,9 @@ export default function Sidebar({ isOpen, isMobile, onClose, width }: SidebarPro
           transition: transform 0.25s ease;
           flex-shrink: 0;
           position: relative;
-          z-index: 100;
+          z-index: 1201;
+          backface-visibility: hidden;
+          -webkit-font-smoothing: antialiased;
         }
         .sb-root.sb-mobile-closed {
           transform: translateX(-100%);
@@ -152,7 +154,7 @@ export default function Sidebar({ isOpen, isMobile, onClose, width }: SidebarPro
           left: 0; top: 0; bottom: 0;
         }
         .sb-root.sb-mobile-open {
-          transform: translateX(0);
+          transform: none;
           position: fixed;
           left: 0; top: 0; bottom: 0;
         }
