@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import DataTable, { Column } from "@/components/UI/DataTable";
-import AuditChangesModal from "@/components/UI/AuditChangesModal";
 import { getAuditTrails, AuditRow } from "@/services/auditService";
+import {
+  looksLikeHtmlValue,
+  looksLikeImageValue,
+  HtmlPreview,
+  ImagePreview,
+} from "@/components/UI/AuditChangesModal";
 
 function AuditTrailsPage() {
   const [audits, setAudits] = useState<AuditRow[]>([]);
@@ -12,9 +17,6 @@ function AuditTrailsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [perPage, setPerPage] = useState(10);
-
-  const [changesOpen, setChangesOpen] = useState(false);
-  const [selectedAudit, setSelectedAudit] = useState<AuditRow | null>(null);
 
   /* ======================
    * Fetch Audit Trails
@@ -61,24 +63,58 @@ function AuditTrailsPage() {
     return () => clearTimeout(timeout);
   }, [search, currentPage, perPage]);
 
-  const shorten = (value: unknown, max = 80) => {
-    const text = String(value ?? "");
-    if (text.length <= max) return text;
-    return `${text.slice(0, max - 1)}…`;
-  };
+  /* ======================
+   * Render Cell Values
+   * ====================== */
+  const renderCellValues = (values?: Record<string, any>) => {
+    if (!values || Object.keys(values).length === 0)
+      return <span className="text-muted">—</span>;
 
-  const renderPreview = (values?: Record<string, any>) => {
-    if (!values || Object.keys(values).length === 0) return "—";
     const entries = Object.entries(values);
-    return entries
-      .slice(0, 2)
-      .map(([k, v]) => `${k}: ${shorten(v, 40)}`)
-      .join(" • ");
-  };
 
-  const openChanges = (row: AuditRow) => {
-    setSelectedAudit(row);
-    setChangesOpen(true);
+    for (const [key, val] of entries) {
+      if (typeof val === "string") {
+        if (looksLikeHtmlValue(key, val)) {
+          return (
+            <div
+              style={{
+                width: 380,
+                height: 200,
+                overflow: "hidden",
+                borderRadius: 6,
+                border: "0.5px solid #dee2e6",
+                background: "#fff",
+                position: "relative",
+              }}
+            >
+              <div
+                style={{
+                  width: 1140,
+                  height: 600,
+                  transformOrigin: "top left",
+                  transform: "scale(0.333)",
+                  pointerEvents: "none",
+                  overflow: "hidden",
+                }}
+                dangerouslySetInnerHTML={{ __html: val }}
+              />
+            </div>
+          );
+        }
+        if (looksLikeImageValue(key, val)) {
+          return <ImagePreview fieldKey={key} value={val} />;
+        }
+      }
+    }
+
+    return (
+      <div className="small text-muted text-break text-center">
+        {entries
+          .slice(0, 2)
+          .map(([k, v]) => `${k}: ${String(v ?? "").slice(0, 40)}`)
+          .join(" • ")}
+      </div>
+    );
   };
 
   /* ======================
@@ -86,12 +122,12 @@ function AuditTrailsPage() {
    * ====================== */
   const columns: Column<AuditRow>[] = [
     {
-        key: "event",
-        header: "Action",
+      key: "event",
+      header: "Action",
       thClassName: "text-nowrap text-center",
       tdClassName: "align-top text-nowrap text-center",
-        width: 110,
-        render: (row) => (
+      width: 110,
+      render: (row) => (
         <span
           className={`badge text-uppercase ${
             row.event?.toLowerCase() === "created"
@@ -105,79 +141,49 @@ function AuditTrailsPage() {
         >
           {row.event}
         </span>
-        ),
-    },
-    {
-        key: "user",
-        header: "Performed By",
-      thClassName: "text-nowrap text-center",
-      tdClassName: "align-top text-center",
-        width: 160,
-        render: (row) =>
-        row.user
-            ? `${row.user.fname ?? ""} ${row.user.lname ?? ""}` ||
-            row.user.email
-            : "System",
-    },
-    {
-        key: "auditable_type",
-        header: "Model",
-      thClassName: "text-nowrap text-center",
-      tdClassName: "align-top text-nowrap text-center",
-        width: 120,
-        render: (row) => row.auditable_type.split("\\").pop(),
-    },
-
-    // 🔹 OLD VALUES
-    {
-        key: "old_values",
-        header: "From",
-      thClassName: "text-nowrap text-center",
-      tdClassName: "align-top text-center",
-        render: (row) => (
-          <div className="small text-muted text-break text-center">{renderPreview(row.old_values)}</div>
-        ),
-    },
-
-    // 🔹 NEW VALUES
-    {
-        key: "new_values",
-        header: "To",
-      thClassName: "text-nowrap text-center",
-      tdClassName: "align-top text-center",
-        render: (row) => (
-          <div className="small text-muted text-break text-center">{renderPreview(row.new_values)}</div>
-        ),
-    },
-
-    {
-      key: "changes",
-      header: "Changes",
-      thClassName: "text-nowrap text-center",
-      tdClassName: "align-top text-center",
-      width: 90,
-      render: (row) => (
-        <button
-          type="button"
-          className="btn btn-sm btn-outline-primary"
-          onClick={() => openChanges(row)}
-          aria-label="View changes"
-          title="View changes"
-        >
-          <i className="fas fa-eye" />
-        </button>
       ),
     },
-
     {
-        key: "created_at",
-        header: "Date",
+      key: "user",
+      header: "Performed By",
       thClassName: "text-nowrap text-center",
       tdClassName: "align-top text-center",
-        render: (row) =>
-        new Date(row.created_at).toLocaleString(),
+      width: 160,
+      render: (row) =>
+        row.user
+          ? `${row.user.fname ?? ""} ${row.user.lname ?? ""}` || row.user.email
+          : "System",
     },
-    ];
+    {
+      key: "auditable_type",
+      header: "Model",
+      thClassName: "text-nowrap text-center",
+      tdClassName: "align-top text-nowrap text-center",
+      width: 120,
+      render: (row) => row.auditable_type.split("\\").pop(),
+    },
+    {
+      key: "old_values",
+      header: "From",
+      thClassName: "text-nowrap text-center",
+      tdClassName: "align-top text-center",
+      render: (row) => renderCellValues(row.old_values),
+    },
+    {
+      key: "new_values",
+      header: "To",
+      thClassName: "text-nowrap text-center",
+      tdClassName: "align-top text-center",
+      render: (row) => renderCellValues(row.new_values),
+    },
+    {
+      key: "created_at",
+      header: "Date",
+      thClassName: "text-nowrap text-center",
+      tdClassName: "align-top text-center",
+      render: (row) => new Date(row.created_at).toLocaleString(),
+    },
+  ];
 
   /* ======================
    * UI
@@ -218,24 +224,6 @@ function AuditTrailsPage() {
         tableClassName="table-sm table-striped table-hover align-middle"
         stickyHeader
         wrapperStyle={{ maxHeight: "70vh", overflowY: "auto", overflowX: "hidden" }}
-      />
-
-      <AuditChangesModal
-        show={changesOpen}
-        title="Audit changes"
-        subtitle={
-          selectedAudit
-            ? `${selectedAudit.event?.toUpperCase?.() ?? selectedAudit.event} • ${
-                selectedAudit.auditable_type?.split("\\").pop?.() ?? selectedAudit.auditable_type
-              } #${selectedAudit.auditable_id} • ${new Date(selectedAudit.created_at).toLocaleString()}`
-            : undefined
-        }
-        oldValues={selectedAudit?.old_values}
-        newValues={selectedAudit?.new_values}
-        onClose={() => {
-          setChangesOpen(false);
-          setSelectedAudit(null);
-        }}
       />
     </div>
   );

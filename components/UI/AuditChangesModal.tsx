@@ -113,7 +113,7 @@ function buildAssetCandidates(value: string): string[] {
   return candidates;
 }
 
-function ImagePreview({ fieldKey, value }: { fieldKey: string; value: string }) {
+export function ImagePreview({ fieldKey, value }: { fieldKey: string; value: string }) {
   const candidates = React.useMemo(() => buildAssetCandidates(value), [value]);
   const [idx, setIdx] = React.useState(0);
   const [failed, setFailed] = React.useState(false);
@@ -167,7 +167,7 @@ function ImagePreview({ fieldKey, value }: { fieldKey: string; value: string }) 
   );
 }
 
-function looksLikeImageValue(fieldKey: string, value: any) {
+export function looksLikeImageValue(fieldKey: string, value: any) {
   if (typeof value !== "string") return false;
   const s = value.trim().toLowerCase();
   if (!s) return false;
@@ -180,7 +180,7 @@ function looksLikeImageValue(fieldKey: string, value: any) {
   return extLooks || (keyLooks && (pathLooks || s.includes("/")));
 }
 
-function looksLikeHtmlValue(fieldKey: string, value: any) {
+export function looksLikeHtmlValue(fieldKey: string, value: any) {
   if (typeof value !== "string") return false;
   const s = value.trim();
   if (!s) return false;
@@ -218,7 +218,7 @@ function extractBodyHtml(html: string) {
     .replace(/<\/body>/gi, "");
 }
 
-function HtmlPreview({ html }: { html: string }) {
+export function HtmlPreview({ html }: { html: string }) {
   const [zoomOpen, setZoomOpen] = React.useState(false);
   const srcDoc = React.useMemo(() => {
     const fragment = stripDangerousHtml(extractBodyHtml(html));
