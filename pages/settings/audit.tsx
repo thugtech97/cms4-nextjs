@@ -76,28 +76,8 @@ function AuditTrailsPage() {
       if (typeof val === "string") {
         if (looksLikeHtmlValue(key, val)) {
           return (
-            <div
-              style={{
-                width: 380,
-                height: 200,
-                overflow: "hidden",
-                borderRadius: 6,
-                border: "0.5px solid #dee2e6",
-                background: "#fff",
-                position: "relative",
-              }}
-            >
-              <div
-                style={{
-                  width: 1140,
-                  height: 600,
-                  transformOrigin: "top left",
-                  transform: "scale(0.333)",
-                  pointerEvents: "none",
-                  overflow: "hidden",
-                }}
-                dangerouslySetInnerHTML={{ __html: val }}
-              />
+            <div style={{ width: 400 }}>
+              <HtmlPreview html={val} height={250} zoomable={true} />
             </div>
           );
         }

@@ -218,7 +218,15 @@ function extractBodyHtml(html: string) {
     .replace(/<\/body>/gi, "");
 }
 
-export function HtmlPreview({ html }: { html: string }) {
+export function HtmlPreview({
+  html,
+  zoomable = true,
+  height = 320,
+}: {
+  html: string;
+  zoomable?: boolean;
+  height?: number;
+}) {
   const [zoomOpen, setZoomOpen] = React.useState(false);
   const srcDoc = React.useMemo(() => {
     const fragment = stripDangerousHtml(extractBodyHtml(html));
@@ -257,7 +265,7 @@ export function HtmlPreview({ html }: { html: string }) {
 
   return (
     <>
-      {zoomOpen ? (
+      {zoomable && zoomOpen ? (
         <div
           className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
           style={{ background: "rgba(0, 0, 0, 0.7)", zIndex: 1070 }}
@@ -296,24 +304,26 @@ export function HtmlPreview({ html }: { html: string }) {
       ) : null}
 
       <div className="border rounded overflow-hidden bg-white">
-      <div className="d-flex justify-content-end p-1 bg-light border-bottom">
-        <button
-          type="button"
-          className="btn btn-sm btn-outline-secondary"
-          onClick={() => setZoomOpen(true)}
-          aria-label="Zoom preview"
-          title="Zoom"
-        >
-          <i className="fas fa-search-plus" />
-        </button>
+        {zoomable && (
+          <div className="d-flex justify-content-end p-1 bg-light border-bottom">
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => setZoomOpen(true)}
+              aria-label="Zoom preview"
+              title="Zoom"
+            >
+              <i className="fas fa-search-plus" />
+            </button>
+          </div>
+        )}
+        <iframe
+          title="HTML preview"
+          sandbox="allow-same-origin"
+          srcDoc={srcDoc}
+          style={{ width: "100%", height, border: 0, display: "block" }}
+        />
       </div>
-      <iframe
-        title="HTML preview"
-        sandbox="allow-same-origin"
-        srcDoc={srcDoc}
-        style={{ width: "100%", height: 320, border: 0, display: "block" }}
-      />
-    </div>
     </>
   );
 }
