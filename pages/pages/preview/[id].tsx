@@ -1,8 +1,11 @@
+import Head from "next/head";
 import LandingPageLayout from "@/components/Layout/GuestLayout";
+import { requireAdminPreviewAccess } from "@/lib/adminPreviewAccess";
 import { composeContentFromGrapes, extractGrapesParts } from "@/lib/grapesContent";
 import { getPageById } from "@/services/pageService";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { GetServerSidePropsContext } from "next";
 
 type PreviewPageData = {
   id: number;
@@ -157,13 +160,18 @@ export default function AdminPagePreview() {
       }}
       layout={{ fullWidth: true }}
     >
+      <Head>
+        <meta name="robots" content="noindex,nofollow,noarchive" />
+        <title>{pageData?.title || "Page Preview"}</title>
+      </Head>
+
       {loading ? (
         <div className="container py-5">
           <div className="text-center text-muted">Loading page preview...</div>
         </div>
       ) : error ? (
         <div className="container py-5">
-          <div className="alert alert-danger mb-0">{error}</div>
+          <div className="alert alert-danger mb-0">Unable to load page preview.</div>
         </div>
       ) : pageData ? (
         <div
@@ -178,4 +186,13 @@ export default function AdminPagePreview() {
       )}
     </LandingPageLayout>
   );
+}
+
+export async function getServerSideProps(ctx: GetServerSidePropsContext) {
+  const allowed = await requireAdminPreviewAccess(ctx);
+  if (!allowed) {
+    return { notFound: true };
+  }
+
+  return { props: {} };
 }

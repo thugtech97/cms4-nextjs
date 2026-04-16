@@ -60,6 +60,10 @@ export type PublicMenuItem = {
   openInNewTab?: boolean | number | string;
   open_in_new_tab?: boolean | number | string;
   newTab?: boolean | number | string;
+  targetBlank?: boolean | number | string;
+  target_blank?: boolean | number | string;
+  targetAttr?: string;
+  target_attr?: string;
   children?: PublicMenuItem[];
 };
 

@@ -3,6 +3,7 @@ import Sidebar from './_Sidebar';
 import Topbar from './_Topbar2';
 import ToastHost from "@/components/UI/ToastHost";
 import Head from "next/head";
+import { syncAuthTokenCookieFromStorage } from "@/lib/authToken";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -14,6 +15,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const sidebarToggleRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
+    syncAuthTokenCookieFromStorage();
+
     const media = window.matchMedia("(max-width: 991px)");
     const update = () => setIsMobile(media.matches);
     update();

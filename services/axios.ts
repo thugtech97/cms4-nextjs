@@ -1,4 +1,6 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from "axios";
+import { clearStoredAuthToken } from "@/lib/authToken";
+import { notifyCurrentUserUpdated, storeCurrentUser } from "@/lib/currentUser";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL + "/api";
 
@@ -45,7 +47,9 @@ axiosInstance.interceptors.response.use(
         // On public pages, a 401 can happen if an endpoint is protected.
         // Do not force-navigate to login (/) unless we're in the admin area.
         if (!noRedirect && !isPublicPage) {
-          localStorage.removeItem("auth_token");
+            clearStoredAuthToken();
+            storeCurrentUser(null);
+            notifyCurrentUserUpdated();
           window.location.href = "/";
         }
       }

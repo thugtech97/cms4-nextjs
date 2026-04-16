@@ -1,10 +1,12 @@
 import Head from "next/head";
 import LandingPageLayout from "@/components/Layout/GuestLayout";
+import { requireAdminPreviewAccess } from "@/lib/adminPreviewAccess";
 import { getArticle } from "@/services/articleService";
 import { getMenuById } from "@/services/menuService";
 import { articleToAlbum } from "@/schemas/articleToAlbum";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import type { GetServerSidePropsContext } from "next";
 
 type PreviewArticle = {
   id: number;
@@ -28,11 +30,19 @@ const renderMenuItems = (items: any[]): string => {
   for (const item of items) {
     const label = item.title || item.name || item.label || item.text || "Untitled";
     const href = item.url || item.link || item.path || (item.page ? `/pages/${item.page.slug || item.page.id}` : "#");
-    const openInNewTabValue = item?.openInNewTab ?? item?.open_in_new_tab ?? item?.newTab;
+    const openInNewTabValue =
+      item?.openInNewTab ??
+      item?.open_in_new_tab ??
+      item?.newTab ??
+      item?.targetBlank ??
+      item?.target_blank ??
+      item?.targetAttr ??
+      item?.target_attr;
     const openInNewTab =
       openInNewTabValue === true ||
       openInNewTabValue === 1 ||
-      ["true", "1", "yes"].includes(String(openInNewTabValue ?? "").trim().toLowerCase());
+      ["true", "1", "yes", "_blank"].includes(String(openInNewTabValue ?? "").trim().toLowerCase()) ||
+      /^https?:\/\//i.test(String(href || ""));
     const targetAttrs = openInNewTab ? ' target="_blank" rel="noopener noreferrer"' : "";
     html += `<li><a href="${href}"${targetAttrs}>${label}</a>`;
 
@@ -128,6 +138,7 @@ export default function AdminNewsPreview() {
       <Head>
         <title>{article?.meta_title || article?.name || "News Preview"}</title>
         <meta name="description" content={article?.meta_description || article?.teaser || ""} />
+        <meta name="robots" content="noindex,nofollow,noarchive" />
       </Head>
 
       {loading ? (
@@ -136,7 +147,7 @@ export default function AdminNewsPreview() {
         </div>
       ) : error ? (
         <div className="container py-5">
-          <div className="alert alert-danger mb-0">{error}</div>
+          <div className="alert alert-danger mb-0">Unable to load news preview.</div>
         </div>
       ) : article ? (
         <div className="container-fluid px-4 pt-3">
@@ -174,4 +185,13 @@ export default function AdminNewsPreview() {
       )}
     </LandingPageLayout>
   );
+}
+
+export async function getServerSideProps(ctx: GetServerSidePropsContext) {
+  const allowed = await requireAdminPreviewAccess(ctx);
+  if (!allowed) {
+    return { notFound: true };
+  }
+
+  return { props: {} };
 }

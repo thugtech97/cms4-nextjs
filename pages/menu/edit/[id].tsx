@@ -15,6 +15,7 @@ import { toast } from "@/lib/toast";
 import {
   flattenTree,
   buildTree,
+  serializeMenuTree,
 } from "@/components/MenuBuilder/treeUtils";
 import CustomUrlPanel from "@/components/MenuBuilder/CustomUrlPanel";
 
@@ -103,7 +104,7 @@ function EditMenu() {
     try {
       await updateMenu(Number(id), {
         name: menuName,
-        items: tree,
+        items: serializeMenuTree(tree),
         //is_active: true,
       });
 

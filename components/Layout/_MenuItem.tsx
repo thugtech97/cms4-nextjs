@@ -17,15 +17,25 @@ export default function MenuItem({
 
   const href = item.target;
   const isInternal = item.type === "page";
+  const rawNewTabValue =
+    item.openInNewTab ??
+    item.open_in_new_tab ??
+    item.newTab ??
+    item.targetBlank ??
+    item.target_blank ??
+    item.targetAttr ??
+    item.target_attr ??
+    "";
+  const normalizedNewTabValue = String(rawNewTabValue).trim().toLowerCase();
+  const isExternalCustomUrl = item.type === "url" && /^https?:\/\//i.test(String(href || ""));
   const opensInNewTab =
-    item.openInNewTab === true ||
-    item.openInNewTab === 1 ||
-    String(item.openInNewTab ?? item.open_in_new_tab ?? item.newTab ?? "")
-      .trim()
-      .toLowerCase() === "true" ||
-    String(item.openInNewTab ?? item.open_in_new_tab ?? item.newTab ?? "")
-      .trim()
-      .toLowerCase() === "1";
+    rawNewTabValue === true ||
+    rawNewTabValue === 1 ||
+    normalizedNewTabValue === "true" ||
+    normalizedNewTabValue === "1" ||
+    normalizedNewTabValue === "yes" ||
+    normalizedNewTabValue === "_blank" ||
+    isExternalCustomUrl;
   const hasChildren = item.children && item.children.length > 0;
 
   const normalizePath = (url: string) => {

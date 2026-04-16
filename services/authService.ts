@@ -1,4 +1,6 @@
 import { axiosInstance } from "./axios";
+import { storeAuthToken, clearStoredAuthToken } from "@/lib/authToken";
+import { notifyCurrentUserUpdated, storeCurrentUser } from "@/lib/currentUser";
 
 export const login = async (email: string, password: string) => {
   const response = await axiosInstance.post("/login", {
@@ -13,8 +15,18 @@ export const login = async (email: string, password: string) => {
     localStorage.removeItem("cms4.websiteSettings.v1");
     localStorage.removeItem("cms4.homeBanner.fonts.v1");
 
-    localStorage.setItem("auth_token", response.data.token);
+    storeAuthToken(response.data.token);
   }
 
   return response.data;
+};
+
+export const logout = () => {
+  clearStoredAuthToken();
+  storeCurrentUser(null);
+  notifyCurrentUserUpdated();
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("cms4.websiteSettings.v1");
+    localStorage.removeItem("cms4.homeBanner.fonts.v1");
+  }
 };

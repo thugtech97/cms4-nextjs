@@ -9,6 +9,11 @@ export interface User {
   lname: string;
   email: string;
   avatar?: string;
+  role?: string;
+  user_type?: string;
+  is_admin?: boolean | number;
+  isAdmin?: boolean | number;
+  roles?: Array<string | { name?: string; role?: string }>;
 }
 
 /* =======================
