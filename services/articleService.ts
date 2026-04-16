@@ -32,12 +32,24 @@ export interface NewsCategoryRow {
   slug: string;
   articles_count?: number;
   created_at?: string;
+  deleted_at?: string | null;
+  is_deleted?: boolean | number | string;
+  deleted?: boolean;
+  status?: string;
+  visibility?: string;
 }
 
 interface FetchCategoriesParams {
   search?: string;
   page?: number;
   per_page?: number;
+  sort_by?: string;
+  sort_order?: string;
+  show_deleted?: boolean | number;
+  with_trashed?: boolean | number;
+  only_trashed?: boolean | number;
+  only_deleted?: boolean | number;
+  [key: string]: any;
 }
 
 export const getArticleCategories = async (
@@ -71,6 +83,45 @@ export const updateArticleCategory = async (
 ) => {
   const res = await axiosInstance.put(`/article-categories/${id}`, payload);
   return res.data.data;
+};
+
+export const deleteArticleCategory = (id: number) => {
+  return axiosInstance.delete(`/article-categories/${id}`);
+};
+
+export const postMethodDeleteArticleCategory = (id: number) => {
+  return axiosInstance.post(`/article-categories/${id}`, { _method: "DELETE" });
+};
+
+export const postDeleteArticleCategoryByPayload = (id: number) => {
+  return axiosInstance.post(`/article-categories/delete`, { id });
+};
+
+export const restoreArticleCategory = async (id: number) => {
+  const attempts: Array<() => Promise<any>> = [
+    () => axiosInstance.post(`/article-categories/${id}/restore`),
+    () => axiosInstance.post(`/article-categories/restore/${id}`),
+    () => axiosInstance.patch(`/article-categories/${id}/restore`),
+    () => axiosInstance.put(`/article-categories/${id}/restore`),
+    () => axiosInstance.post(`/article-categories/${id}/restore`, { _method: "PATCH" }),
+    () => axiosInstance.post(`/article-categories/${id}`, { _method: "PATCH", action: "restore" }),
+    () => axiosInstance.post(`/article-categories/restore`, { id }),
+  ];
+
+  let lastErr: any;
+  for (const attempt of attempts) {
+    try {
+      return await attempt();
+    } catch (err: any) {
+      lastErr = err;
+      const status = err?.response?.status;
+      if (status === 400 || status === 401 || status === 403 || status === 422) {
+        throw err;
+      }
+    }
+  }
+
+  throw lastErr;
 };
 
 export interface CreateArticlePayload {

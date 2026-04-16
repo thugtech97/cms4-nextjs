@@ -6,6 +6,7 @@ import ConfirmModal from "@/components/UI/ConfirmModal";
 import { getCurrentUserCached, initialsForUser, resolveAvatarUrl, subscribeCurrentUserUpdated } from "@/lib/currentUser";
 import { getWebsiteSettingsCached, resolveWebsiteAssetUrl, subscribeWebsiteSettingsUpdated } from "@/lib/websiteSettings";
 import type { User } from "@/services/accountService";
+import { logout } from "@/services/authService";
 
 type TopbarProps = {
   onToggleSidebar?: () => void;
@@ -84,6 +85,7 @@ export default function Topbar({ onToggleSidebar, sidebarToggleRef }: TopbarProp
 
   const handleLogout = () => {
     setShowLogoutConfirm(false);
+    logout();
     router.push("/");
   };
 

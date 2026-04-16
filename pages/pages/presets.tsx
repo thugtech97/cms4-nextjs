@@ -26,6 +26,7 @@ function PresetPage() {
   const [showAdvancedModal, setShowAdvancedModal] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [showDeleted, setShowDeleted] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [recentlyDeletedPresets, setRecentlyDeletedPresets] = useState<LayoutPreset[]>(() => {
     try {
       if (typeof window === "undefined") return [];
@@ -301,6 +302,97 @@ function PresetPage() {
 
     } catch (err) {
       toast.error("Something went wrong.");
+    }
+  };
+
+  const buildPresetFormData = (preset: Pick<LayoutPreset, "name" | "category" | "content" | "is_active">) => {
+    const fd = new FormData();
+    fd.append("name", preset.name);
+    fd.append("category", preset.category || "");
+    fd.append("content", preset.content);
+    fd.append("is_active", preset.is_active ? "1" : "0");
+    return fd;
+  };
+
+  const bulkSetActive = async (active: boolean) => {
+    if (selectedIds.length === 0) {
+      toast.error("Select at least one preset");
+      return;
+    }
+    if (showDeleted) {
+      toast.error("Bulk actions are disabled in Trash view");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const results = await Promise.allSettled(
+        selectedIds.map(async (id) => {
+          const preset = presets.find((item) => item.id === id);
+          if (!preset) {
+            throw new Error(`Preset ${id} not found`);
+          }
+
+          await layoutPresetService.update(
+            id,
+            buildPresetFormData({
+              name: preset.name,
+              category: preset.category,
+              content: preset.content,
+              is_active: active,
+            })
+          );
+        })
+      );
+
+      const ok = results.filter((result) => result.status === "fulfilled").length;
+      const fail = results.length - ok;
+      if (fail === 0) {
+        toast.success(`${active ? "Activated" : "Deactivated"} ${ok} preset(s)`);
+      } else {
+        toast.error(`Updated ${ok}, failed ${fail}`);
+      }
+
+      setSelectedIds([]);
+      fetchPresets();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.message || "Failed to update selected presets");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmBulkDelete = async () => {
+    if (selectedIds.length === 0) {
+      setShowBulkDeleteConfirm(false);
+      toast.error("Select at least one preset");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const results = await Promise.allSettled(
+        selectedIds.map(async (id) => {
+          await deletePresetSoftFirst(id);
+          await rememberDeletedById(id);
+        })
+      );
+
+      const ok = results.filter((result) => result.status === "fulfilled").length;
+      const fail = results.length - ok;
+      if (fail === 0) {
+        toast.success(`Trashed ${ok} preset(s)`);
+      } else {
+        toast.error(`Trashed ${ok}, failed ${fail}`);
+      }
+
+      setShowBulkDeleteConfirm(false);
+      setSelectedIds([]);
+      fetchPresets();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.message || "Failed to trash selected presets");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -582,6 +674,34 @@ function PresetPage() {
           setSearch(value);
           setCurrentPage(1);
         }}
+        actionsMenu={(
+          <>
+            <button
+              className="list-group-item list-group-item-action"
+              onClick={() => bulkSetActive(true)}
+              type="button"
+              disabled={showDeleted || selectedIds.length === 0 || loading}
+            >
+              Activate
+            </button>
+            <button
+              className="list-group-item list-group-item-action"
+              onClick={() => bulkSetActive(false)}
+              type="button"
+              disabled={showDeleted || selectedIds.length === 0 || loading}
+            >
+              Deactivate
+            </button>
+            <button
+              className="list-group-item list-group-item-action text-danger"
+              onClick={() => setShowBulkDeleteConfirm(true)}
+              type="button"
+              disabled={showDeleted || selectedIds.length === 0 || loading}
+            >
+              Delete
+            </button>
+          </>
+        )}
         rightExtras={(
           <div className="d-flex align-items-center gap-2 flex-nowrap">
             <button
@@ -694,6 +814,17 @@ function PresetPage() {
           }
         }}
         onCancel={() => setDeleteModalOpen(false)}
+      />
+
+      <ConfirmModal
+        show={showBulkDeleteConfirm}
+        title="Move presets to Trash"
+        message={<>Move selected <strong>{selectedIds.length}</strong> preset(s) to Trash?</>}
+        confirmLabel="Trash"
+        cancelLabel="Cancel"
+        danger={true}
+        onConfirm={confirmBulkDelete}
+        onCancel={() => setShowBulkDeleteConfirm(false)}
       />
 
       <div className="modal fade" id="presetModal" tabIndex={-1}>
