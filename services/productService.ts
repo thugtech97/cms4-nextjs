@@ -2,14 +2,11 @@ import axios from "axios";
 import { axiosInstance } from "@/services/axios";
 
 export const createProduct = async (form: FormData) => {
-  // Let the browser/axios set the Content-Type including boundary
   try {
     const res = await axiosInstance.post("/products", form);
     return res.data;
   } catch (err: any) {
-    // If validation error, attempt a few compatibility retries with alternate keys/endpoints
     const status = err?.response?.status;
-    const data = err?.response?.data;
     if (status === 422) {
       const tryEndpoints = ["/products", "/product", "/products/create"];
       const altKeys = ["category_id", "category", "categoryId", "product_category_id", "product_category"];
@@ -30,33 +27,36 @@ export const createProduct = async (form: FormData) => {
         for (const key of altKeys) {
           try {
             const fd = copyForm(form);
-            // if key already present keep original; otherwise append a guess
             if (!fd.has || typeof fd.has !== "function" || !fd.has(key)) {
-              // try to read an existing category value from common keys
               const candidates = ["category_id", "category", "categoryId", "product_category_id", "product_category"];
               let val: any = null;
               try {
-                (form as any).forEach((v: any, k: string) => { if (candidates.includes(k) && !val) val = v; });
+                (form as any).forEach((v: any, k: string) => {
+                  if (candidates.includes(k) && !val) val = v;
+                });
               } catch {
                 if ((form as any).entries) {
-                  for (const pair of (form as any).entries()) { if (candidates.includes(pair[0]) && !val) val = pair[1]; }
+                  for (const pair of (form as any).entries()) {
+                    if (candidates.includes(pair[0]) && !val) val = pair[1];
+                  }
                 }
               }
               if (val) fd.append(key, val);
             }
-
             const r = await axiosInstance.post(ep, fd);
             return r.data;
           } catch (e: any) {
-            // try next combination
             continue;
           }
         }
       }
     }
 
-    // Return structured error info for the caller to inspect (avoid uncaught runtime overlay)
-    return { success: false, status: err?.response?.status ?? 500, error: err?.response?.data ?? err?.message };
+    return {
+      success: false,
+      status: err?.response?.status ?? 500,
+      error: err?.response?.data ?? err?.message,
+    };
   }
 };
 
@@ -84,23 +84,26 @@ export const getProduct = async (id: string | number) => {
       return res.data;
     } catch (e: any) {
       lastErr = e;
-      // try next
-      if (!e?.response || e.response.status !== 404) break; // non-404 should bubble up
+      if (!e?.response || e.response.status !== 404) break;
     }
   }
-  // If all direct endpoints returned 404, try fetching the products list and match by id/slug
+
   try {
     const listRes = await getProducts({ per_page: 1000 });
     const list = listRes?.data ?? listRes ?? [];
     const items: any[] = Array.isArray(list) ? list : (list?.items ?? list?.rows ?? []);
     const idStr = String(id);
-    const found = items.find((p) => String(p.id ?? p.product_id) === idStr || String(p.slug) === idStr || String(p.name) === idStr);
+    const found = items.find(
+      (p) =>
+        String(p.id ?? p.product_id) === idStr ||
+        String(p.slug) === idStr ||
+        String(p.name) === idStr
+    );
     if (found) return found;
   } catch (e) {
-    // ignore and fall through to throw last error
+    // ignore
   }
 
-  // As a last resort, try absolute URLs built from NEXT_PUBLIC_API_URL (with/without /api or /v1)
   try {
     const rawBase = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
     const candidates = [
@@ -118,7 +121,6 @@ export const getProduct = async (id: string | number) => {
         const res = await axios.get(url);
         return res.data;
       } catch (e: any) {
-        // try next
         if (!e?.response || e.response.status !== 404) break;
       }
     }
@@ -126,75 +128,38 @@ export const getProduct = async (id: string | number) => {
     // ignore
   }
 
-  // If we reach here, throw the last error so caller can handle it
   throw lastErr || new Error("Product not found");
 };
 
 export const updateProduct = async (id: string | number, data: any) => {
-  // If data is a FormData (file upload present), use multipart strategies
   const isForm = typeof FormData !== "undefined" && data instanceof FormData;
 
   if (isForm) {
-    const endpoints: Array<{ method: "put" | "post"; url: string; useOverride?: boolean }> = [
-      { method: "put", url: `/products/${id}` },
-      { method: "post", url: `/products/${id}`, useOverride: true },
-      { method: "post", url: `/product/${id}`, useOverride: true },
-    ];
-
-    let lastErr: any = null;
-    for (const ep of endpoints) {
-      try {
-        if (ep.method === "put") {
-          const res = await axiosInstance.put(ep.url, data);
-          return res.data;
-        }
-
-        if (ep.useOverride) {
-          const fd = new FormData();
-          try {
-            (data as any).forEach((v: any, k: string) => fd.append(k, v));
-          } catch {
-            for (const pair of (data as any).entries ? (data as any).entries() : []) {
-              fd.append(pair[0], pair[1]);
-            }
-          }
-          fd.append("_method", "PUT");
-          const res = await axiosInstance.post(ep.url, fd);
-          return res.data;
-        }
-
-        const res = await axiosInstance.post(ep.url, data);
-        return res.data;
-      } catch (e: any) {
-        lastErr = e;
-        if (!e?.response || (e.response.status && e.response.status >= 500)) break;
-      }
-    }
-
-    throw lastErr || new Error("Failed to update product");
-  }
-
-  // If data is plain JSON (no file), send JSON payloads which some backends expect
-  const jsonEndpoints = [`/products/${id}`, `/product/${id}`, `/products/${id}/update`];
-  let lastErrJson: any = null;
-  for (const url of jsonEndpoints) {
+    // Never use PUT for multipart — PHP cannot parse files on PUT requests.
+    // Always POST with _method=PUT spoofing.
+    const fd = new FormData();
     try {
-      const res = await axiosInstance.put(url, data);
-      return res.data;
-    } catch (e: any) {
-      lastErrJson = e;
-      // try post with _method override as fallback
-      try {
-        const body = { ...data, _method: "PUT" };
-        const res2 = await axiosInstance.post(url, body);
-        return res2.data;
-      } catch (e2: any) {
-        lastErrJson = e2;
+      (data as any).forEach((v: any, k: string) => fd.append(k, v));
+    } catch {
+      if ((data as any).entries) {
+        for (const pair of (data as any).entries()) fd.append(pair[0], pair[1]);
       }
     }
+    fd.append("_method", "PUT");
+
+    const res = await axiosInstance.post(`/products/${id}`, fd);
+    return res.data;
   }
 
-  throw lastErrJson || new Error("Failed to update product");
+  // Plain JSON — PUT is fine
+  try {
+    const res = await axiosInstance.put(`/products/${id}`, data);
+    return res.data;
+  } catch (e: any) {
+    // Fallback: POST with _method spoof
+    const res = await axiosInstance.post(`/products/${id}`, { ...data, _method: "PUT" });
+    return res.data;
+  }
 };
 
 export const deleteProduct = async (id: string | number) => {
@@ -206,14 +171,11 @@ export const deleteProduct = async (id: string | number) => {
       return res.data;
     } catch (e: any) {
       lastErr = e;
-      // try POST with _method=DELETE for servers that don't accept DELETE
       try {
-        const body = { _method: "DELETE" } as any;
-        const res2 = await axiosInstance.post(ep, body);
+        const res2 = await axiosInstance.post(ep, { _method: "DELETE" });
         return res2.data;
       } catch (e2: any) {
         lastErr = e2;
-        // try next
       }
     }
   }
@@ -262,19 +224,17 @@ export const bulkDeleteProducts = async (ids: Array<string | number>) => {
       return res.data ?? res;
     } catch (err: any) {
       lastErr = err;
-      // continue trying alternates unless unrecoverable
       const status = err?.response?.status;
       if (status === 400 || status === 401 || status === 403 || status === 422) break;
     }
   }
 
-  // fallback: delete items one by one
   try {
     for (const id of ids) {
       try {
         await deleteProduct(id);
       } catch (e) {
-        // continue deleting others
+        // continue
       }
     }
     return { success: true };
@@ -304,7 +264,6 @@ export const bulkUpdateStatus = async (ids: Array<string | number>, status: stri
     }
   }
 
-  // fallback: update each item individually
   try {
     for (const id of ids) {
       try {
@@ -319,4 +278,13 @@ export const bulkUpdateStatus = async (ids: Array<string | number>, status: stri
   }
 };
 
-export default { createProduct, getProducts, getProduct, updateProduct, deleteProduct, restoreProduct, bulkDeleteProducts, bulkUpdateStatus };
+export default {
+  createProduct,
+  getProducts,
+  getProduct,
+  updateProduct,
+  deleteProduct,
+  restoreProduct,
+  bulkDeleteProducts,
+  bulkUpdateStatus,
+};
