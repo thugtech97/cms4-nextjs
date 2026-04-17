@@ -57,11 +57,15 @@ export default function LandingPageLayout({
 
   const baseTitle = pageData?.meta?.title || pageData?.title || "Page";
   const tabTitle = companyName ? `${baseTitle} | ${companyName}` : baseTitle;
+  const metaDescription = pageData?.meta?.description || null;
+  const metaKeywords = pageData?.meta?.keywords || null;
 
   return (
     <div className="d-flex flex-column min-vh-100">
       <Head>
         <title>{tabTitle}</title>
+        {metaDescription && <meta name="description" content={metaDescription} />}
+        {metaKeywords && <meta name="keywords" content={metaKeywords} />}
         <link rel="stylesheet" href="/css/public-css.css" />
         <link rel="stylesheet" href="/css/custom.css" />
         <link rel="stylesheet" href="/css/product.css" />

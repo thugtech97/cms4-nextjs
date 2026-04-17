@@ -345,7 +345,7 @@ export default function CreateProductCategory() {
   const handleSubmit = async () => {
     if (!name) return toast.error("Please provide category name");
 
-    const endpoints = ["/product-categories", "/create-product-category"];
+    const endpoints = ["/product-categories"];
     let created: any = null;
     try {
       for (const ep of endpoints) {
