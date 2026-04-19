@@ -42,3 +42,7 @@ export const updateRole = (
 ) => {
   return axiosInstance.put(`/roles/${id}`, payload);
 };
+
+export const deleteRole = (id: number) => {
+  return axiosInstance.delete(`/roles/${id}`);
+};

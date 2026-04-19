@@ -8,6 +8,7 @@ import {
   RoleRow,
   createRole,
   updateRole,
+  deleteRole
 } from "@/services/roleService";
 
 function ManageRoles() {
@@ -121,19 +122,45 @@ function ManageRoles() {
       key: "options",
       header: "Options",
       render: (row) => (
-        <button
-          className="btn btn-link p-0 text-secondary"
-          title="Edit"
-          onClick={() => {
-            setEditingRole(row);
-            setName(row.name);
-            setDescription(row.description || "");
-          }}
-        >
-          <i className="fas fa-edit" />
-        </button>
+        <div className="d-flex gap-2">
+          {/* Edit */}
+          <button
+            className="btn btn-link p-0 text-secondary"
+            title="Edit"
+            onClick={() => {
+              setEditingRole(row);
+              setName(row.name);
+              setDescription(row.description || "");
+            }}
+          >
+            <i className="fas fa-edit" />
+          </button>
+
+          {/* Delete */}
+          <button
+            className="btn btn-link p-0 text-danger"
+            title="Delete"
+            onClick={async () => {
+              if (!confirm("Are you sure you want to delete this role?")) return;
+
+              try {
+                await deleteRole(row.id);
+                toast.success("Role deleted successfully.");
+                fetchRoles();
+              } catch (err: any) {
+                console.error(err);
+                toast.error(
+                  err?.response?.data?.message ||
+                  "Failed to delete role."
+                );
+              }
+            }}
+          >
+            <i className="fas fa-trash" />
+          </button>
+        </div>
       ),
-    },
+    }
   ];
 
   /* ======================
