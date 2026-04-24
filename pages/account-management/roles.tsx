@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import DataTable, { Column } from "@/components/UI/DataTable";
 import SearchBar from "@/components/UI/SearchBar";
@@ -8,8 +8,10 @@ import {
   RoleRow,
   createRole,
   updateRole,
-  deleteRole
+  deleteRole,
 } from "@/services/roleService";
+
+type SortOrder = "asc" | "desc";
 
 function ManageRoles() {
   const [roles, setRoles] = useState<RoleRow[]>([]);
@@ -19,49 +21,107 @@ function ManageRoles() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [perPage, setPerPage] = useState(10);
+  const [sortBy, setSortBy] = useState<string>("name");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [showAdvancedModal, setShowAdvancedModal] = useState(false);
+  const silentSortFetchRef = useRef(false);
 
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [showRoleModal, setShowRoleModal] = useState(false);
   const [editingRole, setEditingRole] = useState<RoleRow | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
-  /* ======================
-   * Fetch Roles
-   * ====================== */
-  const fetchRoles = async () => {
+  const sortRowsClientSide = (rows: RoleRow[], sortByKey: string, order: SortOrder) => {
+    const direction = order === "asc" ? 1 : -1;
+    const copy = [...rows];
+
+    const getText = (r: RoleRow, key: "name" | "description") =>
+      (r?.[key] ?? "").toString().toLowerCase();
+    const getModifiedMs = (r: RoleRow) => {
+      const ms = new Date(r.updated_at).getTime();
+      return Number.isFinite(ms) ? ms : 0;
+    };
+
+    copy.sort((a, b) => {
+      if (sortByKey === "updated_at") {
+        return (getModifiedMs(a) - getModifiedMs(b)) * direction;
+      }
+      if (sortByKey === "description") {
+        return getText(a, "description").localeCompare(getText(b, "description")) * direction;
+      }
+      return getText(a, "name").localeCompare(getText(b, "name")) * direction;
+    });
+
+    return copy;
+  };
+
+  const fetchRoles = async (opts?: { silent?: boolean }) => {
     try {
-      setLoading(true);
+      const silent = opts?.silent ?? false;
+      if (!silent) setLoading(true);
+
       const res = await getRoles({
         search,
         page: currentPage,
         per_page: perPage,
       });
 
-      setRoles(res.data.data);
-      setTotalPages(res.data.last_page);
+      const apiRows: RoleRow[] = Array.isArray(res?.data?.data) ? res.data.data : [];
+      setRoles(sortRowsClientSide(apiRows, sortBy, sortOrder));
+      setTotalPages(res?.data?.last_page ?? res?.data?.meta?.last_page ?? 1);
     } catch (err) {
       console.error("Failed to load roles", err);
+      toast.error("Failed to load roles");
     } finally {
-      setLoading(false);
+      if (!(opts?.silent ?? false)) setLoading(false);
     }
   };
 
   useEffect(() => {
-    const timeout = setTimeout(fetchRoles, 400);
+    const silent = silentSortFetchRef.current;
+    silentSortFetchRef.current = false;
+    const timeout = setTimeout(() => fetchRoles({ silent }), 400);
     return () => clearTimeout(timeout);
-  }, [search, currentPage, perPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, currentPage, perPage, sortBy, sortOrder]);
 
-  /* ======================
-   * Save Role
-   * ====================== */
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [search, currentPage, perPage, sortBy, sortOrder]);
+
+  const resetRoleForm = () => {
+    setEditingRole(null);
+    setName("");
+    setDescription("");
+  };
+
+  const openCreateModal = () => {
+    resetRoleForm();
+    setShowRoleModal(true);
+  };
+
+  const openEditModal = (role: RoleRow) => {
+    setEditingRole(role);
+    setName(role.name);
+    setDescription(role.description || "");
+    setShowRoleModal(true);
+  };
+
+  const closeRoleModal = () => {
+    setShowRoleModal(false);
+    resetRoleForm();
+  };
+
   const handleSaveRole = async () => {
-    // 🔎 Client-side validation
     if (!name.trim()) {
-      return toast.error("Role name is required");
+      toast.error("Role name is required");
+      return;
     }
 
     if (!description.trim()) {
-      return toast.error("Role description is required");
+      toast.error("Role description is required");
+      return;
     }
 
     try {
@@ -79,93 +139,123 @@ function ManageRoles() {
         toast.success("Role created successfully.");
       }
 
-      // Reset form
-      setEditingRole(null);
-      setName("");
-      setDescription("");
-
-      // Refresh list
+      closeRoleModal();
       fetchRoles();
     } catch (err: any) {
       console.error("Failed to save role", err);
-
-      toast.error(
-        err?.response?.data?.message ||
-          "Failed to save role. Please try again."
-      );
+      toast.error(err?.response?.data?.message || "Failed to save role. Please try again.");
     }
   };
 
-  /* ======================
-   * Columns
-   * ====================== */
+  const handleDeleteRole = async (role: RoleRow) => {
+    if (!confirm(`Are you sure you want to delete "${role.name}"?`)) return;
+
+    try {
+      await deleteRole(role.id);
+      toast.success("Role deleted successfully.");
+      setSelectedIds((prev) => prev.filter((id) => id !== role.id));
+      fetchRoles();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || "Failed to delete role.");
+    }
+  };
+
+  const bulkDeleteRoles = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedIds.length} role(s)?`)) return;
+
+    try {
+      await Promise.all(selectedIds.map((id) => deleteRole(id)));
+      toast.success(`Deleted ${selectedIds.length} role(s)`);
+      setSelectedIds([]);
+      fetchRoles();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || "Failed to delete selected roles.");
+    }
+  };
+
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) setSelectedIds(roles.map((role) => role.id));
+    else setSelectedIds([]);
+  };
+
+  const toggleRow = (id: number, checked: boolean) => {
+    setSelectedIds((prev) =>
+      checked ? Array.from(new Set([...prev, id])) : prev.filter((selectedId) => selectedId !== id)
+    );
+  };
+
   const columns: Column<RoleRow>[] = [
+    {
+      key: "select",
+      header: (
+        <input
+          type="checkbox"
+          checked={roles.length > 0 && roles.every((role) => selectedIds.includes(role.id))}
+          onChange={(e) => toggleSelectAll(e.target.checked)}
+        />
+      ),
+      render: (row) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.includes(row.id)}
+          onChange={(e) => toggleRow(row.id, e.target.checked)}
+        />
+      ),
+    },
     {
       key: "name",
       header: "Role Name",
-      render: (row) => (
-        <span className="fw-bold text-primary">{row.name}</span>
-      ),
+      sortable: true,
+      sortField: "name",
+      defaultSortOrder: "asc",
+      render: (row) => <span className="fw-bold">{row.name}</span>,
     },
     {
       key: "description",
       header: "Description",
-      render: (row) => row.description || "—",
+      sortable: true,
+      sortField: "description",
+      defaultSortOrder: "asc",
+      render: (row) => row.description || "-",
     },
     {
       key: "updated_at",
       header: "Last Updated",
-      render: (row) =>
-        new Date(row.updated_at).toLocaleString(),
+      sortable: true,
+      sortField: "updated_at",
+      defaultSortOrder: "desc",
+      render: (row) => (row.updated_at ? new Date(row.updated_at).toLocaleString() : "-"),
     },
     {
       key: "options",
       header: "Options",
       render: (row) => (
-        <div className="d-flex gap-2">
-          {/* Edit */}
+        <>
           <button
-            className="btn btn-link p-0 text-secondary"
+            className="btn btn-link p-0 me-2 text-secondary"
             title="Edit"
-            onClick={() => {
-              setEditingRole(row);
-              setName(row.name);
-              setDescription(row.description || "");
-            }}
+            onClick={() => openEditModal(row)}
+            type="button"
           >
             <i className="fas fa-edit" />
           </button>
 
-          {/* Delete */}
           <button
             className="btn btn-link p-0 text-danger"
             title="Delete"
-            onClick={async () => {
-              if (!confirm("Are you sure you want to delete this role?")) return;
-
-              try {
-                await deleteRole(row.id);
-                toast.success("Role deleted successfully.");
-                fetchRoles();
-              } catch (err: any) {
-                console.error(err);
-                toast.error(
-                  err?.response?.data?.message ||
-                  "Failed to delete role."
-                );
-              }
-            }}
+            onClick={() => handleDeleteRole(row)}
+            type="button"
           >
             <i className="fas fa-trash" />
           </button>
-        </div>
+        </>
       ),
-    }
+    },
   ];
 
-  /* ======================
-   * UI
-   * ====================== */
   return (
     <div className="container-fluid px-4 pt-3">
       <h3 className="mb-3">Manage Roles</h3>
@@ -177,55 +267,55 @@ function ManageRoles() {
           setSearch(value);
           setCurrentPage(1);
         }}
-        rightExtras={(
+        actionsMenu={(
           <button
+            className="list-group-item list-group-item-action text-danger"
+            onClick={bulkDeleteRoles}
             type="button"
-            className="btn btn-success d-flex align-items-center justify-content-center"
-            style={{ height: 40, padding: "10px 18px", whiteSpace: "nowrap" }}
-            onClick={() => setShowAdvancedModal(true)}
+            disabled={selectedIds.length === 0 || loading}
           >
-            <span style={{ lineHeight: 1, textAlign: "center", display: "inline-block" }}>
-              Advanced Search
-            </span>
+            Delete
           </button>
+        )}
+        rightExtras={(
+          <div className="d-flex align-items-center gap-2">
+            <button
+              type="button"
+              className="btn btn-success d-flex align-items-center justify-content-center"
+              style={{ height: 40, padding: "10px 18px", whiteSpace: "nowrap" }}
+              onClick={() => setShowAdvancedModal(true)}
+            >
+              <span style={{ lineHeight: 1, textAlign: "center", display: "inline-block" }}>
+                Advanced Search
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-primary d-flex align-items-center justify-content-center"
+              style={{ height: 40, padding: "10px 24px", whiteSpace: "nowrap" }}
+              onClick={openCreateModal}
+            >
+              Create Role
+            </button>
+          </div>
         )}
         filtersOpen={showAdvancedModal}
         onFiltersOpenChange={(open) => {
           if (!open) setShowAdvancedModal(false);
         }}
         externalOpenAsModal={true}
+        onApplyFilters={({ sortBy: sBy, sortOrder: sOrder, perPage: sPerPage }) => {
+          setSortBy(sBy === "modified" ? "updated_at" : sBy === "title" ? "name" : sBy);
+          setSortOrder(String(sOrder).toLowerCase() === "asc" ? "asc" : "desc");
+          setPerPage(sPerPage);
+          setCurrentPage(1);
+        }}
+        initialSortBy={sortBy === "updated_at" ? "modified" : sortBy === "name" ? "title" : sortBy}
+        initialSortOrder={sortOrder}
+        initialPerPage={perPage}
+        showDeletedToggle={false}
       />
-
-      {/* Create / Edit Form */}
-      <div className={`card mb-3 ${editingRole ? "border border-primary shadow-sm" : ""}`}>
-        <div className="card-body">
-          <h6 className="mb-3">
-            {editingRole ? "Edit Role" : "Create Role"}
-          </h6>
-
-          <div className="mb-2">
-            <input
-              className="form-control"
-              placeholder="Role name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-
-          <div className="mb-3">
-            <textarea
-              className="form-control"
-              placeholder="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-
-          <button className="btn btn-primary" onClick={handleSaveRole}>
-            {editingRole ? "Update Role" : "Create Role"}
-          </button>
-        </div>
-      </div>
 
       <DataTable<RoleRow>
         columns={columns}
@@ -235,8 +325,62 @@ function ManageRoles() {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
         itemsPerPage={perPage}
-        onItemsPerPageChange={(n: number) => { setPerPage(n); setCurrentPage(1); }}
+        onItemsPerPageChange={(n: number) => {
+          setPerPage(n);
+          setCurrentPage(1);
+        }}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={(nextBy, nextOrder) => {
+          silentSortFetchRef.current = true;
+          setSortBy(nextBy);
+          setSortOrder(nextOrder);
+          setCurrentPage(1);
+        }}
       />
+
+      {showRoleModal && (
+        <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ background: "rgba(15, 23, 42, 0.35)" }}>
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">{editingRole ? "Edit Role" : "Create Role"}</h5>
+                <button type="button" className="btn-close" aria-label="Close" onClick={closeRoleModal} />
+              </div>
+
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label className="form-label">Role name</label>
+                  <input
+                    className="form-control"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Description</label>
+                  <textarea
+                    className="form-control"
+                    rows={4}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={closeRoleModal}>
+                  Cancel
+                </button>
+                <button type="button" className="btn btn-primary" onClick={handleSaveRole}>
+                  {editingRole ? "Update Role" : "Create Role"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
