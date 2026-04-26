@@ -10,8 +10,8 @@ import {
   LayoutPreset,
 } from "@/services/layoutPresetService";
 import ConfirmModal from "@/components/UI/ConfirmModal";
+import CategoryCombobox from "@/components/UI/CategoryCombobox";
 import { toast } from "@/lib/toast";
-import CategoryCombobox from "@/components/UI/CategoryComboBox";
 
 function PresetPage() {
   const [presets, setPresets] = useState<LayoutPreset[]>([]);
