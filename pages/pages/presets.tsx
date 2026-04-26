@@ -11,6 +11,7 @@ import {
 } from "@/services/layoutPresetService";
 import ConfirmModal from "@/components/UI/ConfirmModal";
 import { toast } from "@/lib/toast";
+import CategoryCombobox from "@/components/UI/CategoryComboBox";
 
 function PresetPage() {
   const [presets, setPresets] = useState<LayoutPreset[]>([]);
@@ -451,6 +452,13 @@ function PresetPage() {
     }));
   }, [sortedPresets, currentPage, perPage]);
 
+  const existingCategories = useMemo(() => {
+    const cats = presets
+      .map((p) => p.category?.trim())
+      .filter((c): c is string => !!c);
+    return Array.from(new Set(cats)).sort();
+  }, [presets]);
+
   /* =========================
    Delete
   ========================== */
@@ -861,12 +869,11 @@ function PresetPage() {
                   Category
                   <Tooltip text="Optional grouping for presets such as Landing Pages, Hero Sections, or Contact Pages." />
                 </label>
-                <input
-                  className="form-control"
+                <CategoryCombobox
                   value={form.category}
-                  onChange={(e) =>
-                    setForm({ ...form, category: e.target.value })
-                  }
+                  onChange={(val) => setForm({ ...form, category: val })}
+                  suggestions={existingCategories}
+                  placeholder="Type or select a category..."
                 />
               </div>
 
