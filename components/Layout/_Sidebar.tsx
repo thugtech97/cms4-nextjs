@@ -43,69 +43,88 @@ export default function Sidebar({ isOpen, isMobile, onClose, width }: SidebarPro
     setOpenMenus((prev) => ({ [key]: !prev[key] }));
   };
 
-  const menuItems = [
-    { label: "Dashboard", icon: "fa-solid fa-house", href: "/dashboard" },
+  const menuSections = [
     {
-      label: "Pages", icon: "fa-solid fa-file-lines", href: "/pages",
-      children: [
-        { label: "Manage Pages", href: "/pages" },
-        { label: "Create a Page", href: "/pages/create" },
-        { label: "Layout Presets", href: "/pages/presets" },
+      label: "CMS",
+      items: [
+        { label: "Dashboard", icon: "fa-solid fa-house", href: "/dashboard" },
+        {
+          label: "Pages", icon: "fa-solid fa-file-lines", href: "/pages",
+          children: [
+            { label: "Manage Pages", href: "/pages" },
+            { label: "Create a Page", href: "/pages/create" },
+            { label: "Layout Presets", href: "/pages/presets" },
+          ],
+        },
+        {
+          label: "Banners", icon: "fa-solid fa-images", href: "/banners",
+          children: [
+            { label: "Manage Home Banner", href: "/banners/home" },
+            { label: "Manage Subpage Banners", href: "/banners" },
+            { label: "Create an Album", href: "/banners/create" },
+          ],
+        },
+        { label: "Files", icon: "fa-solid fa-folder-open", href: "/files" },
+        {
+          label: "Menu", icon: "fa-solid fa-bars", href: "/menu",
+          children: [
+            { label: "Manage Menu", href: "/menu" },
+            { label: "Create a Menu", href: "/menu/create" },
+          ],
+        },
+        {
+          label: "News", icon: "fa-solid fa-newspaper", href: "/news",
+          children: [
+            { label: "Manage News", href: "/news" },
+            { label: "Create News", href: "/news/create" },
+            { label: "Manage Categories", href: "/news/category_index" },
+            { label: "Create a Category", href: "/news/category_create" },
+          ],
+        },
+        {
+          label: "Settings", icon: "fa-solid fa-gear", href: "/settings",
+          children: [
+            { label: "Account Settings", href: "/settings/account" },
+            { label: "Website Settings", href: "/settings/website" },
+            { label: "Audit Trail", href: "/settings/audit" },
+          ],
+        },
+        {
+          label: "Users", icon: "fa-solid fa-users", href: "/users",
+          children: [
+            { label: "Manage Users", href: "/users" },
+            { label: "Create a User", href: "/users/create" },
+          ],
+        },
+        {
+          label: "Account Management", icon: "fa-solid fa-user-shield", href: "/account-management",
+          children: [
+            { label: "Roles", href: "/account-management/roles" },
+            { label: "Access Rights", href: "/account-management/access_rights" },
+          ],
+        },
       ],
     },
     {
-      label: "Banners", icon: "fa-solid fa-images", href: "/banners",
-      children: [
-        { label: "Manage Home Banner", href: "/banners/home" },
-        { label: "Manage Subpage Banners", href: "/banners" },
-        { label: "Create an Album", href: "/banners/create" },
-      ],
-    },
-    { label: "Files", icon: "fa-solid fa-folder-open", href: "/files" },
-    {
-      label: "Menu", icon: "fa-solid fa-bars", href: "/menu",
-      children: [
-        { label: "Manage Menu", href: "/menu" },
-        { label: "Create a Menu", href: "/menu/create" },
-      ],
-    },
-    {
-      label: "News", icon: "fa-solid fa-newspaper", href: "/news",
-      children: [
-        { label: "Manage News", href: "/news" },
-        { label: "Create News", href: "/news/create" },
-        { label: "Manage Categories", href: "/news/category_index" },
-        { label: "Create a Category", href: "/news/category_create" },
-      ],
-    },
-    {
-      label: "Settings", icon: "fa-solid fa-gear", href: "/settings",
-      children: [
-        { label: "Account Settings", href: "/settings/account" },
-        { label: "Website Settings", href: "/settings/website" },
-        { label: "Audit Trail", href: "/settings/audit" },
-      ],
-    },
-    {
-      label: "Users", icon: "fa-solid fa-users", href: "/users",
-      children: [
-        { label: "Manage Users", href: "/users" },
-        { label: "Create a User", href: "/users/create" },
-      ],
-    },
-    {
-      label: "Account Management", icon: "fa-solid fa-user-shield", href: "/account-management",
-      children: [
-        { label: "Roles", href: "/account-management/roles" },
-        { label: "Access Rights", href: "/account-management/access_rights" },
-      ],
-    },
-    {
-      label: "Products", icon: "fa-solid fa-boxes-stacked", href: "/products",
-      children: [
-        { label: "Manage Products", href: "/products" },
-        { label: "Create Product", href: "/products/create" },
-        { label: "Create Category", href: "/products/category_create" },
+      label: "Ecommerce",
+      items: [
+        {
+          label: "Customers", icon: "fa-solid fa-user-tag", href: "/customers",
+          children: [
+            { label: "Manage Customers", href: "/customers" },
+            { label: "Create Customer", href: "/customers/create" },
+          ],
+        },
+        { label: "Coupons", icon: "fa-solid fa-ticket", href: "/coupons" },
+        { label: "Sales Transaction", icon: "fa-solid fa-receipt", href: "/sales-transactions" },
+        {
+          label: "Products", icon: "fa-solid fa-boxes-stacked", href: "/products",
+          children: [
+            { label: "Manage Products", href: "/products" },
+            { label: "Create Product", href: "/products/create" },
+            { label: "Create Category", href: "/products/category_create" },
+          ],
+        },
       ],
     },
   ];
@@ -113,7 +132,7 @@ export default function Sidebar({ isOpen, isMobile, onClose, width }: SidebarPro
   useEffect(() => {
     setOpenMenus((prev) => {
       const next = { ...prev };
-      menuItems.forEach((item: any) => {
+      menuSections.flatMap((section: any) => section.items).forEach((item: any) => {
         if (item.children?.some((child: any) => isPathActive(child.href))) {
           next[item.href] = true;
         }
@@ -387,62 +406,65 @@ export default function Sidebar({ isOpen, isMobile, onClose, width }: SidebarPro
           </Link>
         </div>
 
-        {/* Section label */}
-        <div className="sb-section-label">CMS</div>
-
         {/* Nav */}
         <nav className="sb-nav">
-          {menuItems.map((item: any, index) => {
-            const hasChildren = Boolean(item.children);
-            const childActive = hasChildren && item.children.some((c: any) => isPathActive(c.href));
-            const parentActive = isPathActive(item.href);
-            const isExpanded = !!openMenus[item.href];
-            const highlightParent = parentActive || childActive || isExpanded;
+          {menuSections.map((section: any) => (
+            <div key={section.label}>
+              <div className="sb-section-label">{section.label}</div>
 
-            if (!hasChildren) {
-              return (
-                <Link
-                  key={index}
-                  href={item.href}
-                  onClick={onClose}
-                  className={`sb-single-link${isActive(item.href) ? " sb-active" : ""}`}
-                >
-                  <i className={`${item.icon} sb-nav-icon`} />
-                  <span className="sb-nav-label">{item.label}</span>
-                </Link>
-              );
-            }
+              {section.items.map((item: any) => {
+                const hasChildren = Boolean(item.children);
+                const childActive = hasChildren && item.children.some((c: any) => isPathActive(c.href));
+                const parentActive = isPathActive(item.href);
+                const isExpanded = !!openMenus[item.href];
+                const highlightParent = parentActive || childActive || isExpanded;
 
-            return (
-              <div key={index}>
-                <button
-                  type="button"
-                  className={`sb-parent-btn${highlightParent ? " sb-active" : ""}`}
-                  onClick={() => toggleMenu(item.href)}
-                >
-                  <i className={`${item.icon} sb-nav-icon`} />
-                  <span className="sb-nav-label">{item.label}</span>
-                  <i className={`fa-solid fa-chevron-down sb-chevron${isExpanded ? " open" : ""}`} />
-                </button>
+                if (!hasChildren) {
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={onClose}
+                      className={`sb-single-link${isActive(item.href) ? " sb-active" : ""}`}
+                    >
+                      <i className={`${item.icon} sb-nav-icon`} />
+                      <span className="sb-nav-label">{item.label}</span>
+                    </Link>
+                  );
+                }
 
-                {isExpanded && (
-                  <div className="sb-submenu">
-                    {item.children.map((child: any) => (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        onClick={onClose}
-                        className={`sb-child-link${isActive(child.href) ? " sb-active" : ""}`}
-                      >
-                        <span className="sb-child-dot" />
-                        {child.label}
-                      </Link>
-                    ))}
+                return (
+                  <div key={item.href}>
+                    <button
+                      type="button"
+                      className={`sb-parent-btn${highlightParent ? " sb-active" : ""}`}
+                      onClick={() => toggleMenu(item.href)}
+                    >
+                      <i className={`${item.icon} sb-nav-icon`} />
+                      <span className="sb-nav-label">{item.label}</span>
+                      <i className={`fa-solid fa-chevron-down sb-chevron${isExpanded ? " open" : ""}`} />
+                    </button>
+
+                    {isExpanded && (
+                      <div className="sb-submenu">
+                        {item.children.map((child: any) => (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={onClose}
+                            className={`sb-child-link${isActive(child.href) ? " sb-active" : ""}`}
+                          >
+                            <span className="sb-child-dot" />
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* Footer */}
