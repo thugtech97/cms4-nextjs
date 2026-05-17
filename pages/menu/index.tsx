@@ -3,7 +3,7 @@ import AdminLayout from "@/components/Layout/AdminLayout";
 import DataTable, { Column } from "@/components/UI/DataTable";
 import SearchBar from "@/components/UI/SearchBar";
 import ConfirmModal from "@/components/UI/ConfirmModal";
-import { deleteMenu, getMenus, MenuRow, activateMenu, postMethodDeleteMenu, updateMenuName, restoreMenu, setMenuInactive } from "@/services/menuService";
+import { deleteMenu, getMenus, MenuRow, activateMenu, postMethodDeleteMenu, quickUpdateMenu, restoreMenu, setMenuInactive } from "@/services/menuService";
 import { useRouter } from "next/router";
 import { toast } from "@/lib/toast";
 import Link from "next/link";
@@ -32,11 +32,13 @@ function ManageMenus() {
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [showQuickEdit, setShowQuickEdit] = useState(false);
   const [menuName, setMenuName] = useState("");
+  const [menuIsActive, setMenuIsActive] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [restoreTarget, setRestoreTarget] = useState<MenuRow | null>(null);
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
   const [showAdvancedModal, setShowAdvancedModal] = useState(false);
   const [advancedSearchValues, setAdvancedSearchValues] = useState<AdvancedSearchValues>({});
+  const [updatingMenuStatusId, setUpdatingMenuStatusId] = useState<number | null>(null);
   const silentSortFetchRef = useRef(false);
 
   /* ======================
@@ -84,7 +86,6 @@ function ManageMenus() {
       if (!silent) setLoading(true);
 
       const effectiveShowDeleted = opts?.showDeleted ?? showDeleted;
-      const deletedFlag = effectiveShowDeleted ? 1 : 0;
       const effectivePage = opts?.page ?? currentPage;
 
       const baseParams: any = {
@@ -159,13 +160,44 @@ function ManageMenus() {
     }
   };
 
-  const handleActivate = async (id: number) => {
+  const updateVisibleMenuStatus = (id: number, isActive: boolean) => {
+    setMenus((current) =>
+      current.map((menu) => {
+        if (isActive) {
+          return { ...menu, is_active: menu.id === id };
+        }
+        return menu.id === id ? { ...menu, is_active: false } : menu;
+      })
+    );
+  };
+
+  const updateVisibleMenuAfterQuickEdit = (id: number, name: string, isActive: boolean) => {
+    setMenus((current) =>
+      current.map((menu) => {
+        if (menu.id === id) {
+          return { ...menu, name, is_active: isActive };
+        }
+        return isActive ? { ...menu, is_active: false } : menu;
+      })
+    );
+  };
+
+  const handleMenuStatusToggle = async (row: MenuRow, nextActive: boolean) => {
     try {
-      await activateMenu(id);
-      fetchMenus(); // refresh list
+      setUpdatingMenuStatusId(row.id);
+      if (nextActive) {
+        await activateMenu(row.id);
+      } else {
+        await setMenuInactive(row.id);
+      }
+      updateVisibleMenuStatus(row.id, nextActive);
+      setSelected((current) => (current?.id === row.id ? { ...current, is_active: nextActive } : current));
+      toast.success(nextActive ? "Menu activated" : "Menu deactivated");
     } catch (err) {
-      console.error("Failed to activate menu", err);
-      toast.error("Failed to activate menu");
+      console.error("Failed to update menu status", err);
+      toast.error("Failed to update menu status");
+    } finally {
+      setUpdatingMenuStatusId(null);
     }
   };
 
@@ -174,6 +206,7 @@ function ManageMenus() {
     setMenuPos({ top: rect.bottom + window.scrollY, left: rect.left });
     setSelected(row);
     setMenuName(row.name);
+    setMenuIsActive(!!row.is_active);
     setShowSettingsMenu(true);
   };
 
@@ -184,11 +217,16 @@ function ManageMenus() {
       return;
     }
     try {
-      await updateMenuName(selected.id, menuName.trim());
+      if (menuIsActive && !selected.is_active) {
+        await quickUpdateMenu(selected.id, menuName.trim(), false);
+        await activateMenu(selected.id);
+      } else {
+        await quickUpdateMenu(selected.id, menuName.trim(), menuIsActive);
+      }
+      updateVisibleMenuAfterQuickEdit(selected.id, menuName.trim(), menuIsActive);
       toast.success("Menu updated");
       setShowQuickEdit(false);
       setSelected(null);
-      fetchMenus();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to update menu");
     }
@@ -310,9 +348,9 @@ function ManageMenus() {
     if (!row || row.is_active) return;
     try {
       await activateMenu(id);
+      updateVisibleMenuStatus(id, true);
       toast.success("Menu activated");
       setSelectedIds([]);
-      fetchMenus();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to activate menu");
     }
@@ -409,27 +447,19 @@ function ManageMenus() {
                 <i className="fas fa-edit" />
               </button>
 
-              {/* Set Active */}
-              <button
-                className="btn btn-link p-0"
-                title={
-                  row.is_active
-                    ? "This menu is currently active"
-                    : "Set as active menu"
-                }
-                onClick={() => handleActivate(row.id)}
-                style={{
-                  color: row.is_active ? "#198754" : "#6c757d",
-                  opacity: row.is_active ? 0.5 : 1,
-                }}
-                type="button"
-              >
-                <i
-                  className={`fas ${
-                    row.is_active ? "fa-toggle-on" : "fa-toggle-off"
-                  }`}
+              {/* Menu Status */}
+              <div className="form-check form-switch d-inline-flex align-items-center m-0">
+                <input
+                  className="form-check-input m-0"
+                  type="checkbox"
+                  role="switch"
+                  checked={!!row.is_active}
+                  disabled={updatingMenuStatusId === row.id}
+                  onChange={(e) => handleMenuStatusToggle(row, e.target.checked)}
+                  title={row.is_active ? "Deactivate menu" : "Activate menu"}
+                  aria-label={row.is_active ? "Deactivate menu" : "Activate menu"}
                 />
-              </button>
+              </div>
 
               {/* Settings (Quick Edit / Delete) */}
               <button
@@ -600,7 +630,7 @@ function ManageMenus() {
         </>
       )}
 
-      {/* Quick Edit Modal (menu name only) */}
+      {/* Quick Edit Modal */}
       {showQuickEdit && selected && (
         <div className="position-fixed top-0 start-0 w-100 h-100" style={{ background: "rgba(0,0,0,0.5)", zIndex: 1060 }}>
           <div className="d-flex align-items-center justify-content-center h-100">
@@ -616,6 +646,28 @@ function ManageMenus() {
                     onChange={(e) => setMenuName(e.target.value)}
                     placeholder="Enter menu name"
                   />
+                </div>
+
+                <div className="mb-4">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <label className="form-label mb-0" htmlFor="quick-edit-menu-status">
+                      Menu Status
+                    </label>
+                    <div className="form-check form-switch m-0">
+                      <input
+                        id="quick-edit-menu-status"
+                        className="form-check-input"
+                        type="checkbox"
+                        role="switch"
+                        checked={menuIsActive}
+                        onChange={(e) => setMenuIsActive(e.target.checked)}
+                        aria-label="Menu Status"
+                      />
+                    </div>
+                  </div>
+                  <span className={`badge mt-2 ${menuIsActive ? "bg-success" : "bg-secondary"}`}>
+                    {menuIsActive ? "Active" : "Inactive"}
+                  </span>
                 </div>
 
                 <div className="d-flex justify-content-end gap-2">

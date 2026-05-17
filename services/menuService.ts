@@ -77,6 +77,18 @@ export const updateMenuName = async (id: number, name: string) => {
   }
 };
 
+export const quickUpdateMenu = async (id: number, name: string, isActive: boolean) => {
+  const res: any = await getMenuById(id);
+  const menu = res?.data?.data ?? res?.data;
+  const items = Array.isArray(menu?.items) ? menu.items : [];
+
+  try {
+    return await updateMenu(id, { name, items, is_active: isActive });
+  } catch (err: any) {
+    return axiosInstance.post(`/menus/${id}`, { _method: "PUT", name, items, is_active: isActive });
+  }
+};
+
 export const setMenuInactive = async (id: number) => {
   const res: any = await getMenuById(id);
   const menu = res?.data?.data ?? res?.data;
