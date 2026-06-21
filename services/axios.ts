@@ -22,6 +22,9 @@ axiosInstance.interceptors.request.use((config) => {
     const token = localStorage.getItem("auth_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      // Fallback: cPanel/proxy environments sometimes strip the Authorization header.
+      // X-Api-Token is a custom header that passes through most proxies unmodified.
+      config.headers["X-Api-Token"] = token;
     }
   }
 
